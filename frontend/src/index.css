@@ -1,0 +1,189 @@
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
+}
+
+/* Quita las flechas de los inputs numéricos del PinInput */
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+input[type='number'] {
+  -moz-appearance: textfield;
+}
+
+/* ---------- Fondo "aurora" para que el cristal tenga color detrás ---------- */
+body {
+  background-color: #eef2ff;
+}
+body,
+.gs-aurora {
+  background-image:
+    radial-gradient(40rem 40rem at 0% 0%, rgb(129 140 248 / 0.55), transparent 60%),
+    radial-gradient(36rem 36rem at 100% 10%, rgb(192 132 252 / 0.45), transparent 60%),
+    radial-gradient(44rem 44rem at 80% 100%, rgb(56 189 248 / 0.4), transparent 60%),
+    radial-gradient(30rem 30rem at 10% 90%, rgb(244 114 182 / 0.3), transparent 60%);
+  background-attachment: fixed;
+}
+
+/* Cristal base para tarjetas, barras y paneles */
+@utility glass {
+  @apply border border-white/60 bg-white/45 shadow-xl shadow-indigo-950/10 backdrop-blur-xl backdrop-saturate-150;
+}
+/* Cristal más opaco para menús, modales y textos largos */
+@utility glass-strong {
+  @apply border border-white/70 bg-white/75 shadow-2xl shadow-indigo-950/20 backdrop-blur-2xl backdrop-saturate-150;
+}
+
+@layer components {
+  .label {
+    @apply mb-1 block text-sm font-bold text-slate-700;
+  }
+  .input {
+    @apply block w-full rounded-lg border border-white/70 bg-white/60 px-3 py-2.5 backdrop-blur text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white/80 focus:ring-4 focus:ring-indigo-100 focus:outline-none;
+  }
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-sm {
+    @apply inline-flex items-center justify-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold transition disabled:opacity-50;
+  }
+  .card {
+    @apply glass rounded-2xl p-5;
+  }
+  .card-title {
+    @apply mb-3 text-lg font-extrabold text-slate-900;
+  }
+}
+
+/* ---------- Pines del mapa: icono según el estado del reporte ---------- */
+.gs-pin-wrapper {
+  background: transparent;
+  border: none;
+}
+.gs-pin {
+  position: relative;
+  width: 56px;
+  height: 56px;
+  border-radius: 9999px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 4px solid var(--pin-color);
+  background: rgb(255 255 255 / 0.8);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 6px 14px rgb(15 23 42 / 0.35);
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+.gs-pin:hover {
+  transform: scale(1.12);
+  z-index: 10;
+}
+/* la "punta" del pin */
+.gs-pin::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -14px;
+  transform: translateX(-50%);
+  border-left: 9px solid transparent;
+  border-right: 9px solid transparent;
+  border-top: 12px solid var(--pin-color);
+}
+.gs-pin--resolved {
+  opacity: 0.85;
+}
+.gs-pin--critical::before {
+  content: '';
+  position: absolute;
+  inset: -8px;
+  border-radius: 9999px;
+  border: 3px solid var(--pin-color);
+  animation: gs-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+@keyframes gs-ping {
+  75%,
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+.gs-picker {
+  width: 36px;
+  height: 36px;
+  border-radius: 50% 50% 50% 0;
+  background: #4f46e5;
+  transform: rotate(-45deg);
+  box-shadow: 0 4px 10px rgb(15 23 42 / 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.gs-picker span {
+  width: 12px;
+  height: 12px;
+  border-radius: 9999px;
+  background: #fff;
+}
+
+.gs-me {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  background: #3b82f6;
+  border: 3px solid #fff;
+  box-shadow: 0 0 0 6px rgb(59 130 246 / 0.25);
+}
+
+/* Popup de cristal sin padding para que la imagen llegue al borde */
+.gs-popup .mapboxgl-popup-content {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  background: rgb(255 255 255 / 0.72);
+  backdrop-filter: blur(16px) saturate(1.6);
+  -webkit-backdrop-filter: blur(16px) saturate(1.6);
+  border: 1px solid rgb(255 255 255 / 0.6);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 0.3);
+}
+.gs-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+  border-top-color: rgb(255 255 255 / 0.72);
+}
+.gs-popup .mapboxgl-popup-close-button {
+  z-index: 1;
+  width: 28px;
+  height: 28px;
+  margin: 6px;
+  border-radius: 9999px;
+  font-size: 18px;
+  color: #0f172a;
+  background: rgb(255 255 255 / 0.7);
+  backdrop-filter: blur(8px);
+}
+.mapboxgl-map {
+  font-family: inherit;
+}
+/* El pin bajo el cursor queda por encima de los vecinos */
+.mapboxgl-marker:hover {
+  z-index: 10;
+}
+/* Controles nativos de Mapbox con el mismo efecto de cristal */
+.mapboxgl-ctrl-group {
+  background: rgb(255 255 255 / 0.45) !important;
+  backdrop-filter: blur(12px) saturate(1.5);
+  -webkit-backdrop-filter: blur(12px) saturate(1.5);
+  border: 1px solid rgb(255 255 255 / 0.5);
+  border-radius: 0.75rem !important;
+}
+
+/* ---------- Glassmorphism para los botones sobre el mapa ---------- */
+@layer components {
+  .glass-btn {
+    @apply inline-flex items-center gap-1 rounded-full border border-white/50 bg-white/45 px-3 py-1.5 text-xs font-bold text-indigo-800 shadow-lg shadow-slate-900/20 backdrop-blur-md backdrop-saturate-150 transition hover:bg-white/70;
+  }
+}
