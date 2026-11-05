@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { BuildingOffice2Icon, PencilSquareIcon, PlusIcon, TagIcon } from '@heroicons/react/24/outline'
 import { getAdminAreas, getAdminCategories, saveArea, saveCategory, type AreaInput } from '@/api/AttentionAPI'
 import { AREA_TYPE } from '@/lib/labels'
 import Modal from '@/components/ui/Modal'
@@ -101,16 +100,17 @@ export default function AdminAreasView() {
     <div className="space-y-8">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Áreas y distribución</h1>
-          <p className="text-slate-500">Define quién atiende cada tipo de problema. Los reportes nuevos se asignan solos según su categoría.</p>
+          <h1 className="page-title">Áreas y categorías</h1>
+          <p className="page-subtitle">Configura las dependencias responsables y la distribución automática de reportes.</p>
         </div>
-        <button onClick={() => { setEditing(null); setOpen(true) }} className="btn-primary">
-          <PlusIcon className="size-5" /> Nueva área
-        </button>
+        <button onClick={() => { setEditing(null); setOpen(true) }} className="btn-primary">Agregar área</button>
       </header>
 
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900"><TagIcon className="size-5 text-indigo-600" /> Categoría → área responsable</h2>
+        <div>
+          <h2 className="text-lg font-bold text-slate-900">¿Quién atiende cada tipo de problema?</h2>
+          <p className="text-sm text-slate-500">Los reportes nuevos de cada categoría se asignan automáticamente a esta área.</p>
+        </div>
         {categories.isLoading ? (
           <ListSkeleton rows={4} />
         ) : categories.isError ? (
@@ -137,7 +137,7 @@ export default function AdminAreasView() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-lg font-extrabold text-slate-900"><BuildingOffice2Icon className="size-5 text-indigo-600" /> Áreas y dependencias</h2>
+        <h2 className="text-lg font-bold text-slate-900">Áreas y dependencias</h2>
         {areas.isLoading ? (
           <ListSkeleton rows={4} />
         ) : areas.isError ? (
@@ -152,9 +152,7 @@ export default function AdminAreasView() {
                     <span className={`mt-1 inline-block rounded px-1.5 py-0.5 text-[11px] font-bold ${AREA_TYPE[a.type].className}`}>{AREA_TYPE[a.type].label}</span>
                     {!a.active && <span className="ml-1 rounded bg-slate-200 px-1.5 py-0.5 text-[11px] font-bold text-slate-600">Inactiva</span>}
                   </div>
-                  <button onClick={() => { setEditing(a); setOpen(true) }} className="btn-sm text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50" aria-label={`Editar ${a.name}`}>
-                    <PencilSquareIcon className="size-4" />
-                  </button>
+                  <button onClick={() => { setEditing(a); setOpen(true) }} className="btn-secondary btn-compact shrink-0">Editar</button>
                 </div>
                 {a.description && <p className="text-sm text-slate-600">{a.description}</p>}
                 <dl className="mt-auto grid grid-cols-3 gap-2 pt-2 text-center">
@@ -167,7 +165,7 @@ export default function AdminAreasView() {
             ))}
           </ul>
         )}
-        <p className="text-xs text-slate-500">El personal operativo se asigna a un área desde Moderación → Usuarios.</p>
+        <p className="text-sm text-slate-500">El personal operativo se asigna a su área desde la sección Usuarios.</p>
       </section>
 
       <AreaDialog area={editing} open={open} onClose={() => setOpen(false)} />

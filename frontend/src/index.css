@@ -14,47 +14,66 @@ input[type='number'] {
   -moz-appearance: textfield;
 }
 
-/* ---------- Fondo "aurora" para que el cristal tenga color detrás ---------- */
+/* ---------- Base institucional: fondo neutro y superficies blancas ---------- */
 body {
-  background-color: #eef2ff;
+  background-color: #f4f6f9;
+  color: #0f172a;
 }
-body,
+/* Pantallas de acceso: un toque de color muy sutil */
 .gs-aurora {
-  background-image:
-    radial-gradient(40rem 40rem at 0% 0%, rgb(129 140 248 / 0.55), transparent 60%),
-    radial-gradient(36rem 36rem at 100% 10%, rgb(192 132 252 / 0.45), transparent 60%),
-    radial-gradient(44rem 44rem at 80% 100%, rgb(56 189 248 / 0.4), transparent 60%),
-    radial-gradient(30rem 30rem at 10% 90%, rgb(244 114 182 / 0.3), transparent 60%);
-  background-attachment: fixed;
+  background-image: linear-gradient(180deg, #eef2ff 0%, #f4f6f9 55%);
 }
 
-/* Cristal base para tarjetas, barras y paneles */
+/*
+ * Superficies. Los nombres "glass" se conservan para no tocar todos los componentes,
+ * pero ahora son tarjetas blancas sólidas con borde sutil (más legibles y sobrias).
+ */
 @utility glass {
-  @apply border border-white/60 bg-white/45 shadow-xl shadow-indigo-950/10 backdrop-blur-xl backdrop-saturate-150;
+  @apply border border-slate-200/90 bg-white shadow-sm;
 }
-/* Cristal más opaco para menús, modales y textos largos */
+/* Menús, modales y paneles flotantes */
 @utility glass-strong {
-  @apply border border-white/70 bg-white/75 shadow-2xl shadow-indigo-950/20 backdrop-blur-2xl backdrop-saturate-150;
+  @apply border border-slate-200 bg-white shadow-xl shadow-slate-900/10;
 }
 
 @layer components {
   .label {
-    @apply mb-1 block text-sm font-bold text-slate-700;
+    @apply mb-1 block text-sm font-semibold text-slate-700;
   }
   .input {
-    @apply block w-full rounded-lg border border-white/70 bg-white/60 px-3 py-2.5 backdrop-blur text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:bg-white/80 focus:ring-4 focus:ring-indigo-100 focus:outline-none;
+    @apply block w-full rounded-lg border border-slate-300 bg-white px-3 py-2.5 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-100 focus:outline-none;
   }
+  /* Botones: primario (acción principal), secundario, discreto y peligro */
   .btn-primary {
-    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-indigo-600 px-5 py-3 font-bold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-indigo-600 px-4 py-2.5 font-semibold text-white shadow-sm transition hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-slate-300 bg-white px-4 py-2.5 font-semibold text-slate-700 transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-danger {
+    @apply inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-red-200 bg-white px-4 py-2.5 font-semibold text-red-700 transition hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .btn-link {
+    @apply inline-flex items-center gap-1 text-sm font-semibold text-indigo-700 hover:underline;
+  }
+  /* Tamaño compacto para tablas y listas (combinar con btn-primary / btn-secondary / btn-danger) */
+  .btn-compact {
+    @apply px-3 py-1.5 text-sm;
   }
   .btn-sm {
-    @apply inline-flex items-center justify-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-bold transition disabled:opacity-50;
+    @apply inline-flex items-center justify-center gap-1 rounded-lg px-2.5 py-1.5 text-xs font-semibold transition disabled:opacity-50;
   }
   .card {
-    @apply glass rounded-2xl p-5;
+    @apply glass rounded-xl p-5;
   }
   .card-title {
-    @apply mb-3 text-lg font-extrabold text-slate-900;
+    @apply mb-3 text-base font-bold text-slate-900;
+  }
+  .page-title {
+    @apply text-2xl font-bold tracking-tight text-slate-900;
+  }
+  .page-subtitle {
+    @apply mt-1 text-sm text-slate-500;
   }
 }
 
@@ -145,14 +164,12 @@ body,
   padding: 0;
   overflow: hidden;
   border-radius: 1rem;
-  background: rgb(255 255 255 / 0.72);
-  backdrop-filter: blur(16px) saturate(1.6);
-  -webkit-backdrop-filter: blur(16px) saturate(1.6);
-  border: 1px solid rgb(255 255 255 / 0.6);
-  box-shadow: 0 12px 32px rgb(15 23 42 / 0.3);
+  background: #fff;
+  border: 1px solid rgb(226 232 240);
+  box-shadow: 0 12px 32px rgb(15 23 42 / 0.2);
 }
 .gs-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
-  border-top-color: rgb(255 255 255 / 0.72);
+  border-top-color: #fff;
 }
 .gs-popup .mapboxgl-popup-close-button {
   z-index: 1;
@@ -172,18 +189,16 @@ body,
 .mapboxgl-marker:hover {
   z-index: 10;
 }
-/* Controles nativos de Mapbox con el mismo efecto de cristal */
+/* Controles nativos de Mapbox con el mismo estilo que los botones del mapa */
 .mapboxgl-ctrl-group {
-  background: rgb(255 255 255 / 0.45) !important;
-  backdrop-filter: blur(12px) saturate(1.5);
-  -webkit-backdrop-filter: blur(12px) saturate(1.5);
-  border: 1px solid rgb(255 255 255 / 0.5);
+  background: rgb(255 255 255 / 0.92) !important;
+  border: 1px solid rgb(226 232 240);
   border-radius: 0.75rem !important;
 }
 
 /* ---------- Glassmorphism para los botones sobre el mapa ---------- */
 @layer components {
   .glass-btn {
-    @apply inline-flex items-center gap-1 rounded-full border border-white/50 bg-white/45 px-3 py-1.5 text-xs font-bold text-indigo-800 shadow-lg shadow-slate-900/20 backdrop-blur-md backdrop-saturate-150 transition hover:bg-white/70;
+    @apply inline-flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white/95 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-md shadow-slate-900/10 transition hover:bg-white;
   }
 }

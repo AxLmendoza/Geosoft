@@ -2,14 +2,16 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { ArrowPathIcon, ArrowUturnLeftIcon, CheckBadgeIcon, EyeIcon, EyeSlashIcon, HandThumbDownIcon, HandThumbUpIcon, NoSymbolIcon, TrashIcon } from '@heroicons/react/24/outline'
+import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { deleteReportAsModerator, getModerationReports, restoreReport, setReportVisibility, updateReportStatus } from '@/api/ModerationAPI'
 import { useAuth } from '@/hooks/useAuth'
-import { STATUS_OPTIONS } from '@/lib/labels'
+import { STATUS_OPTIONS, isClosed } from '@/lib/labels'
 import { assetUrl } from '@/lib/media'
 import { formatRelativeDay } from '@/lib/date'
 import SelectBox from '@/components/ui/SelectBox'
+import ActionMenu from '@/components/ui/ActionMenu'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badges'
+import { ListSkeleton } from '@/components/ui/States'
 import StatusDialog from './StatusDialog'
 import BanDialog from './BanDialog'
 import type { Report, ReportStatus } from '@/types'
@@ -59,7 +61,7 @@ export default function ReportsPanel() {
         />
       </div>
 
-      {isLoading && <p className="text-slate-500">Cargando…</p>}
+      {isLoading && <ListSkeleton rows={4} />}
 
       <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl glass">
         {reports.map((r) => {
@@ -82,49 +84,36 @@ export default function ReportsPanel() {
                   <span>· {formatRelativeDay(r.createdAt)}</span>
                 </div>
                 <p className="mt-0.5 truncate text-xs text-slate-500">
-                  {r.author?.name} · {r.author?.email} {r.anonymous && '(anónimo)'} {r.author?.banned && '· BANEADO'}
+                  {r.author?.name} · {r.author?.email} {r.anonymous && '(anónimo)'} {r.author?.banned && '· Suspendido'}
                 </p>
               </div>
-              <div className="flex flex-wrap gap-1.5">
+              <div className="flex flex-wrap gap-2">
                 {r.deletedAt ? (
-                  isAdmin && (
-                    <button onClick={() => restore.mutate(r.id)} className="btn-sm text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50">
-                      <ArrowUturnLeftIcon className="size-4" /> Restaurar
-                    </button>
-                  )
+                  isAdmin && <button onClick={() => restore.mutate(r.id)} className="btn-secondary btn-compact">Restaurar</button>
                 ) : (
                   <>
-                    {r.status !== 'resuelto' && r.status !== 'rechazado' && r.votes.solucionado > 0 && (
-                      <button
-                        onClick={() => resolve.mutate({ id: r.id, status: 'resuelto', note: `Confirmado por moderación (${r.votes.solucionado} vecinos dijeron que ya quedó)` })}
-                        className="btn-sm bg-emerald-600 text-white hover:bg-emerald-700"
-                        title="Marcar como solucionado"
-                      >
-                        <CheckBadgeIcon className="size-4" /> Solucionado
-                      </button>
-                    )}
-                    <button onClick={() => setStatusTarget(r)} className="btn-sm ring-1 ring-indigo-200 text-indigo-700 hover:bg-indigo-50" title="Cambiar estado">
-                      <ArrowPathIcon className="size-4" /> Estado
-                    </button>
                     <button
                       onClick={() => visibility.mutate({ id: r.id, hidden: !r.hidden, reason: r.hidden ? undefined : 'Contenido no apto' })}
-                      className="btn-sm ring-1 ring-slate-300 hover:bg-slate-50"
-                      title={r.hidden ? 'Mostrar' : 'Ocultar'}
+                      className="btn-secondary btn-compact"
                     >
-                      {r.hidden ? <EyeIcon className="size-4" /> : <EyeSlashIcon className="size-4" />}
+                      {r.hidden ? 'Mostrar en el mapa' : 'Ocultar del mapa'}
                     </button>
-                    {r.author && !r.author.banned && (
-                      <button onClick={() => setBanTarget(r.author!)} className="btn-sm text-red-600 ring-1 ring-red-200 hover:bg-red-50" title="Banear autor">
-                        <NoSymbolIcon className="size-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => confirm('¿Eliminar este reporte? Desaparece de la app, pero el administrador lo conserva para estadísticas y puede restaurarlo.') && remove.mutate(r.id)}
-                      className="btn-sm text-red-600 ring-1 ring-red-200 hover:bg-red-50"
-                      title="Eliminar (borrado lógico)"
-                    >
-                      <TrashIcon className="size-4" />
-                    </button>
+                    <ActionMenu
+                      actions={[
+                        {
+                          label: `Marcar solucionado (${r.votes.solucionado} vecinos)`,
+                          hidden: isClosed(r.status) || r.votes.solucionado === 0,
+                          onClick: () => resolve.mutate({ id: r.id, status: 'resuelto', note: `Confirmado por moderación (${r.votes.solucionado} vecinos dijeron que ya quedó)` }),
+                        },
+                        { label: 'Cambiar estado', onClick: () => setStatusTarget(r) },
+                        { label: 'Suspender al autor', hidden: !r.author || !!r.author.banned, danger: true, onClick: () => setBanTarget(r.author!) },
+                        {
+                          label: 'Eliminar (se puede restaurar)',
+                          danger: true,
+                          onClick: () => confirm('¿Eliminar este reporte? Desaparece de la app, pero el administrador lo conserva y puede restaurarlo.') && remove.mutate(r.id),
+                        },
+                      ]}
+                    />
                   </>
                 )}
               </div>

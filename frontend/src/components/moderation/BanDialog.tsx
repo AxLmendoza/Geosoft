@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Checkbox, Field, Label } from '@headlessui/react'
-import { CheckIcon, NoSymbolIcon } from '@heroicons/react/24/solid'
+import { CheckIcon } from '@heroicons/react/24/solid'
 import { toast } from 'react-toastify'
 import Modal from '@/components/ui/Modal'
 import { banUser } from '@/api/ModerationAPI'
@@ -25,7 +25,7 @@ export default function BanDialog({ user, onClose }: Props) {
   })
 
   return (
-    <Modal open={!!user} onClose={onClose} title="Banear usuario">
+    <Modal open={!!user} onClose={onClose} title="Suspender cuenta">
       {user && (
         <div className="space-y-4">
           <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800">
@@ -34,7 +34,7 @@ export default function BanDialog({ user, onClose }: Props) {
           <div>
             <label className="label" htmlFor="ban-reason">Motivo</label>
             <textarea id="ban-reason" rows={3} className="input" value={reason} onChange={(e) => setReason(e.target.value)}
-              placeholder="Ej. Publica imágenes no aptas / información falsa reiterada" maxLength={300} />
+              placeholder="Ej. Publica imágenes no aptas o información falsa reiterada" maxLength={300} />
           </div>
           <Field className="flex items-center gap-2">
             <Checkbox
@@ -51,7 +51,7 @@ export default function BanDialog({ user, onClose }: Props) {
             onClick={() => mutate({ id: user.id, reason: reason.trim(), hideReports })}
             className="flex w-full items-center justify-center gap-2 rounded-xl bg-red-600 py-3 font-bold text-white hover:bg-red-700 disabled:opacity-40"
           >
-            <NoSymbolIcon className="size-5" /> {isPending ? 'Baneando…' : 'Banear'}
+            {isPending ? 'Suspendiendo…' : 'Suspender cuenta'}
           </button>
         </div>
       )}

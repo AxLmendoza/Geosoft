@@ -1,38 +1,49 @@
 import type { AreaType, FlagReason, HistoryKind, ReportStatus, Role, Severity } from '@/types'
 
-/** Etiqueta, descripción para el ciudadano y colores de cada estado */
+/**
+ * Paleta reducida a 4 tonos con significado (en lugar de un color por estado):
+ * por atender · en curso · terminado · fuera de la ruta normal
+ */
+const TONE = {
+  waiting: { className: 'bg-amber-50 text-amber-800 ring-amber-600/25', dot: 'bg-amber-500' },
+  progress: { className: 'bg-indigo-50 text-indigo-800 ring-indigo-600/25', dot: 'bg-indigo-500' },
+  done: { className: 'bg-emerald-50 text-emerald-800 ring-emerald-600/25', dot: 'bg-emerald-500' },
+  exit: { className: 'bg-slate-100 text-slate-700 ring-slate-500/25', dot: 'bg-slate-500' },
+}
+
+/** Etiqueta, descripción para el ciudadano y tono de cada estado */
 export const STATUS: Record<ReportStatus, { label: string; short: string; help: string; className: string; dot: string }> = {
   pendiente: {
     label: 'Reporte recibido', short: 'Recibido', help: 'Recibimos tu reporte y está en la fila de revisión.',
-    className: 'bg-amber-100 text-amber-800 ring-amber-600/20', dot: 'bg-amber-500',
+    ...TONE.waiting,
   },
   en_revision: {
     label: 'En validación', short: 'En validación', help: 'Atención Ciudadana está verificando la información.',
-    className: 'bg-sky-100 text-sky-800 ring-sky-600/20', dot: 'bg-sky-500',
+    ...TONE.waiting,
   },
   asignado: {
     label: 'Asignado a un área', short: 'Asignado', help: 'El área responsable ya tiene tu reporte.',
-    className: 'bg-violet-100 text-violet-800 ring-violet-600/20', dot: 'bg-violet-500',
+    ...TONE.progress,
   },
   en_proceso: {
     label: 'Atención en proceso', short: 'En atención', help: 'El personal está trabajando en la solución.',
-    className: 'bg-indigo-100 text-indigo-800 ring-indigo-600/20', dot: 'bg-indigo-500',
+    ...TONE.progress,
   },
   resuelto: {
     label: 'Reporte resuelto', short: 'Resuelto', help: 'El problema se marcó como solucionado.',
-    className: 'bg-emerald-100 text-emerald-800 ring-emerald-600/20', dot: 'bg-emerald-500',
+    ...TONE.done,
   },
   cerrado: {
     label: 'Reporte cerrado', short: 'Cerrado', help: 'El seguimiento terminó.',
-    className: 'bg-slate-200 text-slate-700 ring-slate-500/20', dot: 'bg-slate-500',
+    ...TONE.done,
   },
   rechazado: {
     label: 'No procedente', short: 'No procedente', help: 'El reporte no procede (duplicado, incompleto o fuera de competencia).',
-    className: 'bg-rose-100 text-rose-800 ring-rose-600/20', dot: 'bg-rose-500',
+    ...TONE.exit,
   },
   canalizado: {
     label: 'Canalizado a otra autoridad', short: 'Canalizado', help: 'Corresponde a otra dependencia y se le turnó.',
-    className: 'bg-cyan-100 text-cyan-800 ring-cyan-600/20', dot: 'bg-cyan-500',
+    ...TONE.exit,
   },
 }
 

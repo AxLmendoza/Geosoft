@@ -25,6 +25,17 @@ export async function getAttentionSummary() {
   return (await api.get<AttentionSummary>('/attention/summary')).data
 }
 
+export type StaleReport = Pick<Report, 'id' | 'title' | 'status' | 'severity' | 'colonia' | 'createdAt'> & {
+  area: AreaRef | null
+  lastMovementAt: string | null
+  daysWithoutMovement: number
+}
+
+/** Reportes abiertos sin movimiento en N días (por defecto STALE_REPORT_DAYS del servidor) */
+export async function getStaleReports(days?: number) {
+  return (await api.get<{ days: number; total: number; reports: StaleReport[] }>('/attention/stale', { params: { days } })).data
+}
+
 /** Con evidencia opcional: se manda como multipart */
 const toForm = (fields: Record<string, string | boolean | undefined>, image?: File | null) => {
   const data = new FormData()

@@ -2,7 +2,6 @@ import { useState, type ReactNode } from 'react'
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
 import { format, startOfYear, subDays, subMonths } from 'date-fns'
-import { DocumentArrowDownIcon } from '@heroicons/react/24/outline'
 import { downloadStatsPdf, getStats, type StatsRange } from '@/api/ModerationAPI'
 import { formatShortDate } from '@/lib/date'
 import StatTile from '@/components/admin/StatTile'
@@ -80,13 +79,13 @@ export default function AdminStatsView() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">Estadísticas <RefreshingBadge show={isFetching && !isLoading} /></h1>
+          <h1 className="page-title flex items-center gap-2">Estadísticas <RefreshingBadge show={isFetching && !isLoading} /></h1>
           <p className="text-slate-500">
             {stats ? `${formatShortDate(stats.range.from)} – ${formatShortDate(stats.range.to)}` : 'Cargando…'} · incluye reportes eliminados
           </p>
         </div>
         <button onClick={() => pdf.mutate(range)} disabled={pdf.isPending} className="btn-primary">
-          <DocumentArrowDownIcon className="size-5" /> {pdf.isPending ? 'Generando PDF…' : 'Descargar PDF'}
+          {pdf.isPending ? 'Generando informe…' : 'Descargar informe PDF'}
         </button>
       </header>
 
@@ -129,15 +128,14 @@ export default function AdminStatsView() {
       ) : (
         <div className={`space-y-6 transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-            <StatTile label="Reportes" value={t.total} hint={`${t.eliminados} eliminados · ${t.ocultos} ocultos`} />
-            <StatTile label="Resueltos" value={t.resueltos} hint={`${(t.tasaResolucion * 100).toFixed(1)}% de resolución`} />
-            <StatTile label="Abiertos" value={t.abiertos} hint={`${t.rechazados} rechazados`} />
-            <StatTile label="Tiempo de solución" value={fmtHours(t.promedioHorasSolucion)} hint="Promedio desde que se reporta" />
-            <StatTile label="Votos de la comunidad" value={t.votos} />
-            <StatTile label="Usuarios" value={t.usuarios} hint={`${t.operativos ?? 0} operativos · ${t.moderadores} moderadores`} />
-            <StatTile label="Baneados" value={t.baneados} />
-            <StatTile label="Denuncias pendientes" value={t.denunciasPendientes} />
+            <StatTile label="Reportes recibidos" value={t.total} />
+            <StatTile label="Abiertos" value={t.abiertos} />
+            <StatTile label="Resueltos" value={t.resueltos} hint={`${(t.tasaResolucion * 100).toFixed(0)}% del total`} />
+            <StatTile label="Tiempo promedio de solución" value={fmtHours(t.promedioHorasSolucion)} />
           </div>
+          <p className="-mt-2 text-sm text-slate-500">
+            {t.rechazados} no procedentes · {t.ocultos} ocultos · {t.eliminados} eliminados · {t.votos} votos de vecinos · {t.usuarios} usuarios ({t.operativos ?? 0} operativos, {t.moderadores} moderadores, {t.baneados} suspendidos) · {t.denunciasPendientes} denuncias pendientes
+          </p>
 
           <Panel title="Reportados vs. resueltos por mes" subtitle="Reportes creados en el mes y los que se marcaron como resueltos en ese mes">
             <MonthlyChart data={stats.monthly} />

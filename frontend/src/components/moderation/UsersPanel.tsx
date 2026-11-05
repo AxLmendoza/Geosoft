@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { MagnifyingGlassIcon, NoSymbolIcon, UserGroupIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon } from '@heroicons/react/24/outline'
 import { getUsers, setUserRole, unbanUser } from '@/api/ModerationAPI'
 import { getPublicAreas } from '@/api/AttentionAPI'
 import Modal from '@/components/ui/Modal'
+import { ListSkeleton } from '@/components/ui/States'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLE } from '@/lib/labels'
 import { formatShortDate } from '@/lib/date'
@@ -104,11 +105,11 @@ export default function UsersPanel() {
         <SelectBox value={banned} onChange={setBanned} className="w-40" options={[
           { value: '' as const, label: 'Todos' },
           { value: 'false' as const, label: 'Activos' },
-          { value: 'true' as const, label: 'Baneados' },
+          { value: 'true' as const, label: 'Suspendidos' },
         ]} />
       </div>
 
-      {isLoading && <p className="text-slate-500">Cargando…</p>}
+      {isLoading && <ListSkeleton rows={4} />}
 
       <div className="overflow-x-auto rounded-2xl glass">
         <table className="w-full min-w-[640px] text-left text-sm">
@@ -128,7 +129,7 @@ export default function UsersPanel() {
                   <p className="font-bold text-slate-900">{u.name}</p>
                   <p className="text-xs text-slate-500">{u.email}</p>
                   {!u.confirmed && <span className="text-xs font-semibold text-amber-600">Sin confirmar</span>}
-                  {u.banned && <p className="text-xs font-semibold text-red-600">Baneado: {u.bannedReason}</p>}
+                  {u.banned && <p className="text-xs font-semibold text-red-600">Suspendido: {u.bannedReason}</p>}
                 </td>
                 <td className="px-4 py-3">
                   <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700">{ROLE[u.role]}</span>
@@ -138,18 +139,12 @@ export default function UsersPanel() {
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1.5">
                     {isAdmin && u.role !== 'admin' && !u.banned && u.confirmed && (
-                      <button onClick={() => setRoleTarget(u)} className="btn-sm text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50">
-                        <UserGroupIcon className="size-4" /> Rol
-                      </button>
+                      <button onClick={() => setRoleTarget(u)} className="btn-secondary btn-compact">Cambiar rol</button>
                     )}
                     {canSanction(u) && (u.banned ? (
-                      <button onClick={() => unban.mutate(u.id)} className="btn-sm text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50">
-                        <ArrowUturnLeftIcon className="size-4" /> Desbanear
-                      </button>
+                      <button onClick={() => unban.mutate(u.id)} className="btn-secondary btn-compact">Reactivar cuenta</button>
                     ) : (
-                      <button onClick={() => setBanTarget(u)} className="btn-sm bg-red-600 text-white hover:bg-red-700">
-                        <NoSymbolIcon className="size-4" /> Banear
-                      </button>
+                      <button onClick={() => setBanTarget(u)} className="btn-danger btn-compact">Suspender</button>
                     ))}
                   </div>
                 </td>

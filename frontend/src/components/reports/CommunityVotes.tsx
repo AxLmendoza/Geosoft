@@ -41,7 +41,7 @@ export default function CommunityVotes({ report, compact = false }: { report: Re
 
   return (
     <div className={compact ? 'space-y-1.5' : 'space-y-2'}>
-      {!compact && <p className="text-sm font-bold text-slate-700">¿Ya lo solucionaron?</p>}
+      {!compact && <p className="text-sm font-semibold text-slate-800">¿Ya lo solucionaron? <span className="font-normal text-slate-500">Opinión de los vecinos</span></p>}
       <div className="flex gap-2">
         <button
           onClick={() => vote('solucionado')}

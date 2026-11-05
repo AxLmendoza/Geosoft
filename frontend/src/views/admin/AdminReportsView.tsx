@@ -2,16 +2,16 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { ArrowUturnLeftIcon, ChevronLeftIcon, ChevronRightIcon, EyeIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, TrashIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { deleteReportAsModerator, destroyAdminReport, getAdminReports, restoreReport, type AdminReportFilters } from '@/api/ModerationAPI'
 import { useCategories } from '@/hooks/useCategories'
 import { STATUS_OPTIONS } from '@/lib/labels'
 import { formatRelativeDay } from '@/lib/date'
-import { PinStatusIcon, pinKind } from '@/components/map/pinIcons'
 import SelectBox from '@/components/ui/SelectBox'
-import { SeverityBadge, StatusBadge } from '@/components/ui/Badges'
+import { StatusBadge } from '@/components/ui/Badges'
+import ActionMenu from '@/components/ui/ActionMenu'
+import Pagination from '@/components/ui/Pagination'
 import ReportFormDialog from '@/components/admin/ReportFormDialog'
-import { ErrorState, RefreshingBadge, Skeleton } from '@/components/ui/States'
+import { EmptyState, ErrorState, ListSkeleton, RefreshingBadge } from '@/components/ui/States'
 import type { Report, ReportStatus } from '@/types'
 
 type Deleted = '' | 'true' | 'all'
@@ -63,33 +63,57 @@ export default function AdminReportsView() {
     setFormOpen(true)
   }
 
+  /** Acciones de cada reporte: las de uso frecuente visibles, las demás en "Más acciones" */
+  const rowActions = (r: Report) => (
+    <div className="flex flex-nowrap justify-end gap-2">
+      <button onClick={() => openForm(r)} className="btn-secondary btn-compact">Editar</button>
+      <ActionMenu
+        actions={[
+          { label: 'Restaurar', hidden: !r.deletedAt, onClick: () => restore.mutate(r.id) },
+          {
+            label: 'Eliminar (se puede restaurar)',
+            hidden: !!r.deletedAt,
+            danger: true,
+            onClick: () => confirm('¿Eliminar este reporte? Desaparece de la app, pero se conserva para estadísticas y puedes restaurarlo.') && softDelete.mutate(r.id),
+          },
+          {
+            label: 'Eliminar definitivamente',
+            danger: true,
+            onClick: () => confirm(`¿Eliminar DEFINITIVAMENTE "${r.title}"? Se borran su foto, historial, votos y denuncias. No se puede deshacer.`) && hardDelete.mutate(r.id),
+          },
+        ]}
+      />
+    </div>
+  )
+
+  const flags = (r: Report) => (
+    <>
+      {r.hidden && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-700">Oculto</span>}
+      {r.deletedAt && <span className="rounded bg-red-50 px-1.5 py-0.5 text-xs font-medium text-red-700">Eliminado</span>}
+    </>
+  )
+
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">Gestionar reportes <RefreshingBadge show={isFetching && !isLoading} /></h1>
-          <p className="text-slate-500">Crea, edita, elimina o restaura cualquier reporte.</p>
+          <h1 className="page-title flex items-center gap-2">Registro de reportes <RefreshingBadge show={isFetching && !isLoading} /></h1>
+          <p className="page-subtitle">Consulta, edita, elimina o restaura cualquier reporte. Para atenderlos usa la Bandeja de atención.</p>
         </div>
-        <button onClick={() => openForm(null)} className="btn-primary">
-          <PlusIcon className="size-5" /> Nuevo reporte
-        </button>
+        <button onClick={() => openForm(null)} className="btn-primary">Registrar reporte</button>
       </header>
 
-      <section className="glass flex flex-col gap-3 rounded-2xl p-4 lg:flex-row lg:items-end">
-        <label className="flex-1">
-          <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Buscar</span>
-          <span className="relative block">
-            <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
-            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Título, descripción, calle o colonia" className="input !py-2 pl-10" />
-          </span>
+      <section className="glass grid gap-3 rounded-xl p-4 sm:grid-cols-2 lg:grid-cols-[1fr_11rem_14rem_11rem] lg:items-end">
+        <label className="sm:col-span-2 lg:col-span-1">
+          <span className="label">Buscar</span>
+          <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Título, descripción, calle o colonia" className="input !py-2" type="search" />
         </label>
-        <SelectBox label="Estado" value={status} onChange={setStatus} className="lg:w-44" options={[{ value: '' as const, label: 'Todos' }, ...STATUS_OPTIONS]} />
-        <SelectBox label="Categoría" value={category} onChange={setCategory} className="lg:w-56" options={categoryOptions} />
+        <SelectBox label="Estado" value={status} onChange={setStatus} options={[{ value: '' as const, label: 'Todos' }, ...STATUS_OPTIONS]} />
+        <SelectBox label="Categoría" value={category} onChange={setCategory} options={categoryOptions} />
         <SelectBox
-          label="Registros"
+          label="Mostrar"
           value={deleted}
           onChange={setDeleted}
-          className="lg:w-44"
           options={[
             { value: '' as const, label: 'Activos' },
             { value: 'true' as const, label: 'Eliminados' },
@@ -98,93 +122,60 @@ export default function AdminReportsView() {
         />
       </section>
 
-      <div className={`glass overflow-x-auto rounded-2xl transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
-        <table className="w-full min-w-[960px] text-left text-sm">
-          <thead className="bg-white/40 text-xs uppercase text-slate-500">
-            <tr>
-              <th className="px-4 py-3">Reporte</th>
-              <th className="px-4 py-3">Estado</th>
-              <th className="px-4 py-3">Área</th>
-              <th className="px-4 py-3">Ubicación</th>
-              <th className="px-4 py-3">Autor</th>
-              <th className="px-4 py-3">Fecha</th>
-              <th className="px-4 py-3 text-right">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-white/50">
+      {isLoading ? (
+        <ListSkeleton rows={6} />
+      ) : isError ? (
+        <ErrorState onRetry={() => refetch()} />
+      ) : reports.length === 0 ? (
+        <EmptyState title="Sin reportes con estos filtros" />
+      ) : (
+        <div className={`transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
+          {/* Celular: lista (sin desplazamiento horizontal) */}
+          <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white md:hidden">
             {reports.map((r) => (
-              <tr key={r.id} className={r.deletedAt ? 'opacity-60' : ''}>
-                <td className="px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <PinStatusIcon kind={pinKind(r)} className="size-7 shrink-0" />
-                    <div className="min-w-0">
-                      <p className="max-w-64 truncate font-bold text-slate-900">#{r.id} · {r.title}</p>
-                      <p className="text-xs font-bold" style={{ color: r.category.color }}>{r.category.name}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-4 py-3">
-                  <div className="flex flex-wrap gap-1">
-                    <StatusBadge status={r.status} />
-                    <SeverityBadge severity={r.severity} />
-                    {r.hidden && <span className="rounded bg-slate-800 px-1.5 text-xs font-bold text-white">Oculto</span>}
-                    {r.deletedAt && <span className="rounded bg-red-600 px-1.5 text-xs font-bold text-white">Eliminado</span>}
-                  </div>
-                </td>
-                <td className="max-w-44 truncate px-4 py-3 text-slate-600">{r.area?.name ?? <span className="text-amber-600">Sin área</span>}</td>
-                <td className="max-w-48 truncate px-4 py-3 text-slate-600">{[r.calle, r.colonia].filter(Boolean).join(', ') || `${r.lat.toFixed(4)}, ${r.lng.toFixed(4)}`}</td>
-                <td className="px-4 py-3 text-slate-600">
-                  {r.author?.name ?? '—'}
-                  {r.anonymous && <span className="block text-xs text-slate-400">anónimo</span>}
-                </td>
-                <td className="whitespace-nowrap px-4 py-3 text-slate-500">{formatRelativeDay(r.createdAt)}</td>
-                <td className="px-4 py-3">
-                  <div className="flex justify-end gap-1.5">
-                    <Link to={`/reports/${r.id}`} className="btn-sm ring-1 ring-slate-300 hover:bg-white/60" title="Ver detalle">
-                      <EyeIcon className="size-4" />
-                    </Link>
-                    <button onClick={() => openForm(r)} className="btn-sm text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50" title="Editar">
-                      <PencilSquareIcon className="size-4" />
-                    </button>
-                    {r.deletedAt ? (
-                      <button onClick={() => restore.mutate(r.id)} className="btn-sm text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50" title="Restaurar">
-                        <ArrowUturnLeftIcon className="size-4" />
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => confirm('¿Eliminar este reporte? Desaparece de la app, pero se conserva para estadísticas y puedes restaurarlo.') && softDelete.mutate(r.id)}
-                        className="btn-sm text-red-600 ring-1 ring-red-200 hover:bg-red-50"
-                        title="Eliminar (se puede restaurar)"
-                      >
-                        <TrashIcon className="size-4" />
-                      </button>
-                    )}
-                    <button
-                      onClick={() => confirm(`¿Eliminar DEFINITIVAMENTE "${r.title}"? Se borran su foto, historial, votos y denuncias. No se puede deshacer.`) && hardDelete.mutate(r.id)}
-                      className="btn-sm bg-red-600 text-white hover:bg-red-700"
-                      title="Eliminar definitivamente"
-                    >
-                      <XCircleIcon className="size-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
+              <li key={r.id} className={`space-y-2 p-4 ${r.deletedAt ? 'opacity-60' : ''}`}>
+                <Link to={`/reports/${r.id}`} className="block font-semibold text-slate-900 hover:underline"><span className="font-normal text-slate-400">#{r.id}</span> {r.title}</Link>
+                <div className="flex flex-wrap items-center gap-1.5"><StatusBadge status={r.status} short />{flags(r)}</div>
+                <p className="text-xs text-slate-500">{r.category.name} · {r.area?.name ?? 'Sin área'} · {formatRelativeDay(r.createdAt)}</p>
+                <div className="flex justify-start">{rowActions(r)}</div>
+              </li>
             ))}
-          </tbody>
-        </table>
-        {isLoading && <div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>}
-        {isError && <div className="p-4"><ErrorState onRetry={() => refetch()} /></div>}
-        {!isLoading && !isError && reports.length === 0 && <p className="p-8 text-center text-slate-500">Sin reportes con estos filtros</p>}
-      </div>
-      {pages > 1 && (
-        <nav className="flex items-center justify-between text-sm" aria-label="Paginación">
-          <p className="text-slate-500">{data?.total} reportes · página {page} de {pages}</p>
-          <div className="flex gap-2">
-            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="btn-sm bg-white/70 px-3 py-2 ring-1 ring-slate-200 disabled:opacity-40" aria-label="Anterior"><ChevronLeftIcon className="size-4" /></button>
-            <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="btn-sm bg-white/70 px-3 py-2 ring-1 ring-slate-200 disabled:opacity-40" aria-label="Siguiente"><ChevronRightIcon className="size-4" /></button>
+          </ul>
+
+          {/* Escritorio: tabla */}
+          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
+                <tr>
+                  <th className="px-4 py-3">Reporte</th>
+                  <th className="px-4 py-3">Estado</th>
+                  <th className="px-4 py-3">Área</th>
+                  <th className="hidden px-4 py-3 2xl:table-cell">Autor</th>
+                  <th className="px-4 py-3">Fecha</th>
+                  <th className="px-4 py-3 text-right"><span className="sr-only">Acciones</span></th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {reports.map((r) => (
+                  <tr key={r.id} className={r.deletedAt ? 'opacity-60' : ''}>
+                    <td className="px-4 py-3">
+                      <Link to={`/reports/${r.id}`} className="block max-w-72 truncate font-semibold text-slate-900 hover:text-indigo-700 hover:underline"><span className="font-normal text-slate-400">#{r.id}</span> {r.title}</Link>
+                      <p className="text-xs text-slate-500">{r.category.name}{r.colonia ? ` · ${r.colonia}` : ''}</p>
+                    </td>
+                    <td className="px-4 py-3"><div className="flex flex-wrap gap-1"><StatusBadge status={r.status} short />{flags(r)}</div></td>
+                    <td className="max-w-44 truncate px-4 py-3 text-slate-600">{r.area?.name ?? <span className="text-amber-700">Sin área</span>}</td>
+                    <td className="hidden whitespace-nowrap px-4 py-3 text-slate-600 2xl:table-cell">{r.author?.name ?? '—'}</td>
+                    <td className="whitespace-nowrap px-4 py-3 text-slate-500">{formatRelativeDay(r.createdAt)}</td>
+                    <td className="px-4 py-3">{rowActions(r)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-        </nav>
+        </div>
       )}
+
+      <Pagination page={page} pages={pages} total={data?.total ?? 0} onChange={setPage} />
 
       <ReportFormDialog open={formOpen} report={editing} onClose={() => setFormOpen(false)} />
     </div>

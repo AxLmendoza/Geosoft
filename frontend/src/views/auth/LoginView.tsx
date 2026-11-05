@@ -2,7 +2,8 @@ import { useForm } from 'react-hook-form'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { login } from '@/api/AuthAPI'
+import { getUser, login } from '@/api/AuthAPI'
+import { homeFor } from '@/lib/navigation'
 import { TOKEN_KEY } from '@/lib/axios'
 import ErrorMessage from '@/components/ui/ErrorMessage'
 import type { LoginForm } from '@/types'
@@ -23,8 +24,9 @@ export default function LoginView() {
     },
     onSuccess: async (token) => {
       localStorage.setItem(TOKEN_KEY, token)
-      await queryClient.invalidateQueries({ queryKey: ['user'] })
-      navigate((location.state as { from?: string } | null)?.from ?? '/', { replace: true })
+      // Cada rol entra a su pantalla de trabajo (admin → Resumen, operativo → su bandeja, ciudadano → mapa)
+      const me = await queryClient.fetchQuery({ queryKey: ['user'], queryFn: getUser, staleTime: 0 })
+      navigate((location.state as { from?: string } | null)?.from ?? homeFor(me.role), { replace: true })
     },
   })
 

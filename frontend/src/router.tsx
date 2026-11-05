@@ -19,6 +19,8 @@ const ModerationView = lazy(() => import('@/views/moderation/ModerationView'))
 const AdminStatsView = lazy(() => import('@/views/admin/AdminStatsView'))
 const AdminReportsView = lazy(() => import('@/views/admin/AdminReportsView'))
 const AdminAreasView = lazy(() => import('@/views/admin/AdminAreasView'))
+const AdminHomeView = lazy(() => import('@/views/admin/AdminHomeView'))
+const UsersView = lazy(() => import('@/views/UsersView'))
 const LoginView = lazy(() => import('@/views/auth/LoginView'))
 const RegisterView = lazy(() => import('@/views/auth/RegisterView'))
 const ConfirmAccountView = lazy(() => import('@/views/auth/ConfirmAccountView'))
@@ -57,9 +59,11 @@ export default function Router() {
 
           <Route element={<ProtectedRoute roles={['moderador', 'admin']} />}>
             <Route path="/moderation" element={page(<ModerationView />)} />
+            <Route path="/users" element={page(<UsersView />)} />
           </Route>
 
           <Route element={<ProtectedRoute roles={['admin']} />}>
+            <Route path="/admin" element={page(<AdminHomeView />)} />
             <Route path="/admin/stats" element={page(<AdminStatsView />)} />
             <Route path="/admin/reports" element={page(<AdminReportsView />)} />
             <Route path="/admin/areas" element={page(<AdminAreasView />)} />

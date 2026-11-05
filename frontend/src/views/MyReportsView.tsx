@@ -33,7 +33,7 @@ export default function MyReportsView() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">
+          <h1 className="page-title flex items-center gap-2">
             Mis reportes <RefreshingBadge show={isFetching && !isLoading} />
           </h1>
           <p className="text-slate-500">Consulta en qué va cada uno de tus reportes.</p>

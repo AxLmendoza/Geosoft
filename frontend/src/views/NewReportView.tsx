@@ -56,7 +56,7 @@ export default function NewReportView() {
   return (
     <form onSubmit={handleSubmit(onSubmit, () => setSubmitted(true))} className="mx-auto max-w-2xl space-y-6" noValidate>
       <header>
-        <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Nuevo reporte</h1>
+        <h1 className="page-title">Nuevo reporte</h1>
         <p className="mt-1 text-slate-500">Toma una foto del problema, marca dónde está y descríbelo.</p>
       </header>
 

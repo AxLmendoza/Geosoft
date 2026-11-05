@@ -2,12 +2,13 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { CheckCircleIcon, EyeSlashIcon, NoSymbolIcon, SparklesIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { getFlags, reviewFlag } from '@/api/ModerationAPI'
 import { FLAG_REASON } from '@/lib/labels'
 import { assetUrl } from '@/lib/media'
 import { formatRelativeDay } from '@/lib/date'
 import SelectBox from '@/components/ui/SelectBox'
+import ActionMenu from '@/components/ui/ActionMenu'
+import { EmptyState, ListSkeleton } from '@/components/ui/States'
 import BanDialog from './BanDialog'
 import type { FlagStatus } from '@/types'
 
@@ -38,8 +39,8 @@ export default function FlagsPanel() {
           { value: 'descartada', label: 'Descartadas' },
         ]}
       />
-      {isLoading && <p className="text-slate-500">Cargando…</p>}
-      {!isLoading && flags.length === 0 && <p className="flex items-center justify-center gap-2 rounded-xl glass p-8 text-center text-slate-500"><SparklesIcon className="size-5 text-indigo-500" /> Sin denuncias</p>}
+      {isLoading && <ListSkeleton rows={3} />}
+      {!isLoading && flags.length === 0 && <EmptyState title="No hay denuncias en esta lista" />}
 
       {flags.map((f) => (
         <article key={f.id} className="flex flex-col gap-4 rounded-2xl glass p-4 sm:flex-row">
@@ -58,7 +59,7 @@ export default function FlagsPanel() {
                   {f.report.title}
                 </Link>
                 <p className="text-xs text-slate-500">
-                  Autor: {f.report.author?.name} ({f.report.author?.email}){f.report.author?.banned && ' · BANEADO'}
+                  Autor: {f.report.author?.name} ({f.report.author?.email}){f.report.author?.banned && ' · Suspendido'}
                   {f.report.hidden && ' · reporte oculto'}
                 </p>
               </>
@@ -67,21 +68,15 @@ export default function FlagsPanel() {
             )}
           </div>
           {status === 'pendiente' && f.report && (
-            <div className="flex flex-wrap gap-2 sm:w-48 sm:flex-col">
-              <button onClick={() => review.mutate({ id: f.id, status: 'procedente', hideReport: true })} className="btn-sm bg-amber-500 text-white hover:bg-amber-600">
-                <EyeSlashIcon className="size-4" /> Procede y ocultar
-              </button>
-              <button onClick={() => review.mutate({ id: f.id, status: 'procedente' })} className="btn-sm bg-emerald-600 text-white hover:bg-emerald-700">
-                <CheckCircleIcon className="size-4" /> Procede
-              </button>
-              <button onClick={() => review.mutate({ id: f.id, status: 'descartada' })} className="btn-sm ring-1 ring-slate-300 hover:bg-slate-50">
-                <XCircleIcon className="size-4" /> Descartar
-              </button>
-              {f.report.author && !f.report.author.banned && (
-                <button onClick={() => setBanTarget(f.report!.author!)} className="btn-sm bg-red-600 text-white hover:bg-red-700">
-                  <NoSymbolIcon className="size-4" /> Banear autor
-                </button>
-              )}
+            <div className="flex flex-wrap gap-2 sm:w-52 sm:flex-col">
+              <button onClick={() => review.mutate({ id: f.id, status: 'procedente', hideReport: true })} className="btn-primary btn-compact">Procede y ocultar</button>
+              <button onClick={() => review.mutate({ id: f.id, status: 'descartada' })} className="btn-secondary btn-compact">Descartar denuncia</button>
+              <ActionMenu
+                actions={[
+                  { label: 'Procede sin ocultar', onClick: () => review.mutate({ id: f.id, status: 'procedente' }) },
+                  { label: 'Suspender al autor', hidden: !f.report.author || !!f.report.author.banned, danger: true, onClick: () => setBanTarget(f.report!.author!) },
+                ]}
+              />
             </div>
           )}
         </article>

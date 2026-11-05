@@ -1,7 +1,6 @@
 import { useForm } from 'react-hook-form'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { TrashIcon } from '@heroicons/react/24/outline'
 import { addToBlacklist, getBlacklist, removeFromBlacklist } from '@/api/ModerationAPI'
 import { formatDateTime } from '@/lib/date'
 import ErrorMessage from '@/components/ui/ErrorMessage'
@@ -40,14 +39,14 @@ export default function BlacklistPanel() {
           <textarea rows={3} className="input" placeholder="Motivo" {...register('reason', { required: 'Motivo obligatorio', minLength: { value: 5, message: 'Mínimo 5 caracteres' } })} />
           {errors.reason && <ErrorMessage>{errors.reason.message}</ErrorMessage>}
         </div>
-        <button disabled={add.isPending} className="w-full rounded-xl bg-slate-900 py-2.5 font-bold text-white hover:bg-slate-800 disabled:opacity-50">
-          Agregar a lista negra
+        <button disabled={add.isPending} className="btn-primary w-full">
+          Vetar correo
         </button>
       </form>
 
       <div className="overflow-hidden rounded-2xl glass">
         {isLoading && <p className="p-6 text-slate-500">Cargando…</p>}
-        {!isLoading && list.length === 0 && <p className="p-8 text-center text-slate-500">La lista negra está vacía</p>}
+        {!isLoading && list.length === 0 && <p className="p-8 text-center text-slate-500">No hay correos vetados</p>}
         <ul className="divide-y divide-slate-100">
           {list.map((b) => (
             <li key={b.id} className="flex items-start justify-between gap-3 p-4">
@@ -60,10 +59,9 @@ export default function BlacklistPanel() {
               </div>
               <button
                 onClick={() => confirm(`¿Quitar ${b.email} de la lista negra? También se desbanea su cuenta.`) && remove.mutate(b.id)}
-                className="btn-sm text-red-600 ring-1 ring-red-200 hover:bg-red-50"
-                aria-label="Quitar"
+                className="btn-secondary btn-compact shrink-0"
               >
-                <TrashIcon className="size-4" />
+                Quitar veto
               </button>
             </li>
           ))}

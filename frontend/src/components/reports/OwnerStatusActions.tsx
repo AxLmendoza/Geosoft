@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { CheckBadgeIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { updateOwnerStatus } from '@/api/ReportAPI'
 import Modal from '@/components/ui/Modal'
 import { isClosed } from '@/lib/labels'
@@ -43,18 +42,12 @@ export default function OwnerStatusActions({ report }: { report: Report }) {
   if (!report.isOwner || isClosed(report.status)) return null
 
   return (
-    <div className="rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-100">
-      <p className="text-sm font-bold text-indigo-900">Actualiza tu reporte</p>
-      <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-        {report.status !== 'en_proceso' && (
-          <button onClick={() => setTarget('en_proceso')} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-white px-3 py-2.5 text-sm font-bold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-100">
-            <WrenchScrewdriverIcon className="size-5" /> Me dieron seguimiento
-          </button>
-        )}
-        <button onClick={() => setTarget('resuelto')} className="flex flex-1 items-center justify-center gap-1.5 rounded-xl bg-emerald-600 px-3 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">
-          <CheckBadgeIcon className="size-5" /> Ya quedó solucionado
-        </button>
-      </div>
+    <>
+      {/* El contenedor (tarjeta "Tu reporte") lo pone la vista de detalle */}
+      <button onClick={() => setTarget('resuelto')} className="btn-secondary w-full">Ya quedó solucionado</button>
+      {report.status !== 'en_proceso' && (
+        <button onClick={() => setTarget('en_proceso')} className="btn-secondary w-full">Ya me dieron seguimiento</button>
+      )}
 
       <Modal open={!!target} onClose={() => setTarget(null)} title={target ? COPY[target].title : ''}>
         {target && (
@@ -64,13 +57,13 @@ export default function OwnerStatusActions({ report }: { report: Report }) {
             <button
               disabled={isPending}
               onClick={() => mutate({ id: report.id, status: target, note: note.trim() || undefined })}
-              className={`w-full rounded-xl py-3 font-bold text-white disabled:opacity-50 ${target === 'resuelto' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-indigo-600 hover:bg-indigo-700'}`}
+              className="btn-primary w-full"
             >
               {isPending ? 'Guardando…' : COPY[target].button}
             </button>
           </div>
         )}
       </Modal>
-    </div>
+    </>
   )
 }
