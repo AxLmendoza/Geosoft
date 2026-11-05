@@ -20,7 +20,9 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import readline from 'node:readline/promises'
 import sharp from 'sharp'
+import { Op } from 'sequelize'
 import { db } from '../config/db'
+import { migrateColumns, migrateEnums } from '../config/migrations'
 import { seed } from '../utils/seed'
 import { hashPassword } from '../utils/auth'
 import { storage, UPLOAD_ROOT } from '../utils/storage'
@@ -53,10 +55,17 @@ async function emptyUploads() {
   console.log(`✔ Imágenes eliminadas de ${dir}`)
 }
 
+/** Mismo orden que al arrancar la API: ENUM → tablas → columnas/índices */
+async function syncSchema() {
+  await migrateEnums(db)
+  await db.sync({ alter: process.env.NODE_ENV !== 'production' })
+  await migrateColumns(db)
+}
+
 /* ------------------------------ seed ------------------------------ */
 async function cmdSeed() {
   await db.authenticate()
-  await db.sync({ alter: true })
+  await syncSchema()
   await seed()
   console.log('✔ Seed completo')
 }
@@ -122,7 +131,7 @@ async function cmdDemo() {
   const count = Number(args.find((a) => /^\d+$/.test(a)) ?? 60)
   if (!(await confirm(`Se crearán 8 usuarios de prueba y ${count} reportes de demostración.`))) return
   await db.authenticate()
-  await db.sync({ alter: true })
+  await syncSchema()
   await seed()
 
   const categories = await Category.findAll()
@@ -195,8 +204,15 @@ async function cmdDemo() {
 /* -------------------------- purge-uploads ------------------------- */
 async function cmdPurgeUploads() {
   await db.authenticate()
-  const reports = await Report.findAll({ paranoid: false, attributes: ['imageUrl', 'thumbUrl'] })
-  const used = new Set(reports.flatMap((r) => [path.basename(r.imageUrl), path.basename(r.thumbUrl)]))
+  const reports = await Report.findAll({ paranoid: false, attributes: ['imageUrl', 'thumbUrl', 'mediumUrl'] })
+  // Las evidencias del seguimiento también viven en /uploads/reports
+  const evidence = await ReportHistory.findAll({ attributes: ['imageUrl', 'thumbUrl'], where: { imageUrl: { [Op.ne]: null } } })
+  const used = new Set(
+    [...reports, ...evidence]
+      .flatMap((r) => [r.imageUrl, r.thumbUrl, r instanceof Report ? r.mediumUrl : null])
+      .filter((p): p is string => !!p)
+      .map((p) => path.basename(p)),
+  )
   const dir = path.join(UPLOAD_ROOT, 'reports')
   const files = await fs.readdir(dir).catch(() => [] as string[])
   const orphans = files.filter((f) => !used.has(f))

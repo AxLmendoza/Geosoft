@@ -43,6 +43,16 @@ export async function flagReport({ id, reason, comment }: { id: number; reason: 
   } catch (e) { rethrow(e) }
 }
 
+/** El autor agrega información adicional (texto y/o foto) a su reporte */
+export async function addReportInfo({ id, note, image }: { id: number; note?: string; image?: File | null }) {
+  const data = new FormData()
+  if (note) data.append('note', note)
+  if (image) data.append('image', image)
+  try {
+    return (await api.post<{ message: string }>(`/reports/${id}/updates`, data)).data.message
+  } catch (e) { rethrow(e) }
+}
+
 /** Ya quedó / Sigue igual. Votar lo mismo otra vez quita el voto */
 export async function voteReport({ id, value }: { id: number; value: VoteValue }) {
   try {

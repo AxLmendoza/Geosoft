@@ -4,7 +4,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { Field, Label, Description, Radio, RadioGroup, Switch } from '@headlessui/react'
-import { EyeSlashIcon } from '@heroicons/react/24/outline'
+import { BuildingOffice2Icon, EyeSlashIcon } from '@heroicons/react/24/outline'
 import { createReport } from '@/api/ReportAPI'
 import { useCategories } from '@/hooks/useCategories'
 import { reverseGeocode } from '@/lib/geocode'
@@ -24,7 +24,7 @@ export default function NewReportView() {
   const [coords, setCoords] = useState<Coords | null>(null)
   const [submitted, setSubmitted] = useState(false)
 
-  const { register, handleSubmit, control, setValue, getValues, formState: { errors } } = useForm<NewReportForm>({
+  const { register, handleSubmit, control, setValue, getValues, watch, formState: { errors } } = useForm<NewReportForm>({
     defaultValues: { title: '', description: '', categoryId: 0, severity: 'media', colonia: '', calle: '', anonymous: true },
   })
 
@@ -34,7 +34,7 @@ export default function NewReportView() {
     onSuccess: (report) => {
       toast.success('¡Reporte publicado! Gracias por ayudar a tu comunidad')
       queryClient.invalidateQueries({ queryKey: ['reports'] })
-      navigate(`/reports/${report.id}`)
+      navigate(`/reports/${report.id}`, { replace: true })
     },
   })
 
@@ -56,7 +56,7 @@ export default function NewReportView() {
   return (
     <form onSubmit={handleSubmit(onSubmit, () => setSubmitted(true))} className="mx-auto max-w-2xl space-y-6" noValidate>
       <header>
-        <h1 className="text-3xl font-extrabold text-slate-900">Nuevo reporte</h1>
+        <h1 className="text-2xl font-extrabold text-slate-900 sm:text-3xl">Nuevo reporte</h1>
         <p className="mt-1 text-slate-500">Toma una foto del problema, marca dónde está y descríbelo.</p>
       </header>
 
@@ -72,7 +72,7 @@ export default function NewReportView() {
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           <div>
             <label className="label" htmlFor="calle">Calle y número</label>
-            <input id="calle" className="input" {...register('calle', { maxLength: 160 })} />
+            <input id="calle" className="input" autoComplete="street-address" {...register('calle', { maxLength: 160 })} />
           </div>
           <div>
             <label className="label" htmlFor="colonia">Colonia</label>
@@ -106,6 +106,20 @@ export default function NewReportView() {
           )}
         />
         {errors.categoryId && <ErrorMessage>{errors.categoryId.message}</ErrorMessage>}
+        {(() => {
+          const selected = categories.find((c) => c.id === watch('categoryId'))
+          if (!selected) return null
+          return (
+            <p className="mt-3 flex items-start gap-2 rounded-xl bg-indigo-50/80 p-3 text-sm text-indigo-900 ring-1 ring-indigo-100">
+              <BuildingOffice2Icon className="size-5 shrink-0" />
+              {selected.area
+                ? selected.area.type === 'externa'
+                  ? <span>Este tipo de problema suele corresponder a <b>{selected.area.name}</b>. Atención Ciudadana revisará si se canaliza.</span>
+                  : <span>Tu reporte llegará directamente a <b>{selected.area.name}</b>.</span>
+                : <span>Atención Ciudadana revisará tu reporte y lo turnará al área correspondiente.</span>}
+            </p>
+          )
+        })()}
 
         <h3 className="mb-2 mt-5 text-sm font-bold text-slate-700">Gravedad</h3>
         <Controller
@@ -131,7 +145,7 @@ export default function NewReportView() {
         <h2 className="card-title">4. Descripción</h2>
         <div>
           <label className="label" htmlFor="title">Título</label>
-          <input id="title" className="input" placeholder="Ej. Fuga de agua frente a la primaria"
+          <input id="title" className="input" enterKeyHint="next" autoComplete="off" placeholder="Ej. Fuga de agua frente a la primaria"
             {...register('title', { required: 'El título es obligatorio', minLength: { value: 3, message: 'Mínimo 3 caracteres' }, maxLength: { value: 120, message: 'Máximo 120 caracteres' } })} />
           {errors.title && <ErrorMessage>{errors.title.message}</ErrorMessage>}
         </div>
@@ -167,9 +181,14 @@ export default function NewReportView() {
         />
       </section>
 
-      <button type="submit" disabled={isPending} className="btn-primary w-full py-4 text-lg">
-        {isPending ? 'Subiendo reporte…' : 'Publicar reporte'}
-      </button>
+      {/* En el celular el botón queda fijo sobre la barra inferior para no tener que bajar todo el formulario */}
+      <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:static">
+        <button type="submit" disabled={isPending} className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-600/30">
+          {isPending ? (
+            <><span className="size-5 animate-spin rounded-full border-2 border-white border-t-transparent" /> Subiendo reporte…</>
+          ) : 'Publicar reporte'}
+        </button>
+      </div>
     </form>
   )
 }

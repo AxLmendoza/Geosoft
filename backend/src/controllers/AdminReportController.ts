@@ -7,7 +7,7 @@ import { ReportFlag } from '../models/ReportFlag'
 import { ReportHistory } from '../models/ReportHistory'
 import { storage } from '../utils/storage'
 import { serializeReport } from '../utils/serializers'
-import { changeStatus } from '../utils/reportStatus'
+import { autoAssign, changeStatus } from '../utils/reportStatus'
 import { buildReportFilters, reportIncludes, serializeMany } from './ReportController'
 
 /** Campos editables que llegan en el formulario (multipart) */
@@ -24,7 +24,10 @@ function pickFields(body: Record<string, any>) {
 
 /** CRUD completo de reportes, solo para el administrador */
 export class AdminReportController {
-  /** ?q=texto&status=&category=&severity=&deleted=true (solo eliminados) | all (todos) */
+  /**
+   * ?q=texto&status=&category=&severity=&area=&deleted=true (solo eliminados) | all (todos)
+   * &page=1&limit=50 → el total va en la cabecera X-Total-Count (el cuerpo sigue siendo un arreglo)
+   */
   static async list(req: Request, res: Response) {
     const where: Record<string, any> = { ...buildReportFilters(req.query) }
     if (req.query.q) {
@@ -33,14 +36,19 @@ export class AdminReportController {
     }
     if (req.query.deleted === 'true') where.deletedAt = { [Op.ne]: null }
 
-    const reports = await Report.findAll({
+    const limit = Math.min(Number(req.query.limit ?? 500), 500)
+    const page = Math.max(Number(req.query.page ?? 1), 1)
+    const { rows, count } = await Report.findAndCountAll({
       where,
       paranoid: !req.query.deleted,
       include: [...reportIncludes, { model: ReportFlag, attributes: ['id', 'status', 'reason'] }],
       order: [['createdAt', 'DESC']],
-      limit: 500,
+      limit,
+      offset: (page - 1) * limit,
+      distinct: true,
     })
-    res.json(await serializeMany(reports, req.user))
+    res.setHeader('X-Total-Count', String(count))
+    res.json(await serializeMany(rows, req.user))
   }
 
   static async create(req: Request, res: Response) {
@@ -48,12 +56,13 @@ export class AdminReportController {
       res.status(400).json({ error: 'La imagen del siniestro es obligatoria' })
       return
     }
-    if (!(await Category.findByPk(req.body.categoryId))) {
+    const category = await Category.findByPk(req.body.categoryId)
+    if (!category) {
       res.status(400).json({ error: 'Categoría no válida' })
       return
     }
 
-    const { imageUrl, thumbUrl } = await storage.saveReportImage(req.file.buffer)
+    const { imageUrl, thumbUrl, mediumUrl } = await storage.saveReportImage(req.file.buffer)
     try {
       const status = req.body.status ?? 'pendiente'
       const report = await db.transaction(async (t) => {
@@ -66,20 +75,23 @@ export class AdminReportController {
             resolvedAt: status === 'resuelto' ? new Date() : null,
             imageUrl,
             thumbUrl,
+            mediumUrl,
             userId: req.user!.id,
           },
           { transaction: t },
         )
         await ReportHistory.create(
-          { reportId: created.id, fromStatus: null, toStatus: status, note: 'Reporte creado por el administrador', changedById: req.user!.id },
+          { reportId: created.id, kind: 'estado', fromStatus: null, toStatus: status, note: 'Reporte creado por el administrador', changedById: req.user!.id },
           { transaction: t },
         )
+        // Igual que los reportes ciudadanos: se asigna al área de la categoría si sigue sin atender
+        if (status === 'pendiente') await autoAssign(created, category, t)
         return created
       })
       await report.reload({ include: reportIncludes })
       res.status(201).json(serializeReport(report, req.user))
     } catch (error) {
-      await storage.remove([imageUrl, thumbUrl])
+      await storage.remove([imageUrl, thumbUrl, mediumUrl])
       throw error
     }
   }
@@ -96,7 +108,7 @@ export class AdminReportController {
       return
     }
 
-    const oldFiles = [report.imageUrl, report.thumbUrl]
+    const oldFiles = [report.imageUrl, report.thumbUrl, report.mediumUrl]
     const image = req.file ? await storage.saveReportImage(req.file.buffer) : null
     try {
       await db.transaction(async (t) => {
@@ -106,7 +118,7 @@ export class AdminReportController {
         }
       })
     } catch (error) {
-      if (image) await storage.remove([image.imageUrl, image.thumbUrl])
+      if (image) await storage.remove([image.imageUrl, image.thumbUrl, image.mediumUrl])
       throw error
     }
     if (image) await storage.remove(oldFiles)
@@ -115,14 +127,15 @@ export class AdminReportController {
     res.json(serializeReport(report, req.user))
   }
 
-  /** Borrado definitivo: elimina el registro, su historial, votos, denuncias y las fotos */
+  /** Borrado definitivo: elimina el registro, su historial, votos, denuncias, las fotos y las evidencias */
   static async destroy(req: Request, res: Response) {
     const report = await Report.findByPk(req.params.reportId, { paranoid: false })
     if (!report) {
       res.status(404).json({ error: 'Reporte no encontrado' })
       return
     }
-    const files = [report.imageUrl, report.thumbUrl]
+    const evidence = await ReportHistory.findAll({ where: { reportId: report.id }, attributes: ['imageUrl', 'thumbUrl'] })
+    const files = [report.imageUrl, report.thumbUrl, report.mediumUrl, ...evidence.flatMap((h) => [h.imageUrl, h.thumbUrl])]
     await db.transaction((t) => report.destroy({ force: true, transaction: t }))
     await storage.remove(files)
     res.json({ message: 'Reporte eliminado definitivamente' })

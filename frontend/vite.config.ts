@@ -39,10 +39,25 @@ export default defineConfig({
           { src: '/icons/maskable-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
         ],
         shortcuts: [
+          // Accesos directos al mantener presionado el ícono de la app (Android / escritorio)
           {
             name: 'Nuevo reporte',
             short_name: 'Reportar',
-            url: '/reports/new',
+            description: 'Toma una foto y reporta un problema',
+            url: '/reports/new?source=shortcut',
+            icons: [{ src: '/icons/pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Mis reportes',
+            short_name: 'Mis reportes',
+            description: 'Consulta el seguimiento de tus reportes',
+            url: '/reports/mine?source=shortcut',
+            icons: [{ src: '/icons/pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
+          },
+          {
+            name: 'Mapa de reportes',
+            short_name: 'Mapa',
+            url: '/?source=shortcut',
             icons: [{ src: '/icons/pwa-192x192.png', sizes: '192x192', type: 'image/png' }],
           },
         ],
@@ -67,7 +82,8 @@ export default defineConfig({
           },
           {
             urlPattern: ({ url, request }) =>
-              request.method === 'GET' && /^\/api\/(reports|categories)/.test(url.pathname),
+              // Solo datos públicos: la bandeja y el panel siempre van a la red
+              request.method === 'GET' && /^\/api\/(reports|categories|areas)/.test(url.pathname),
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api',

@@ -11,9 +11,9 @@ export default function ForgotPasswordView() {
   const { mutate, isPending } = useMutation({
     mutationFn: forgotPassword,
     onError: (e) => toast.error(e.message),
-    onSuccess: (msg) => {
+    onSuccess: (msg, email) => {
       toast.success(msg)
-      navigate('/auth/new-password')
+      navigate('/auth/new-password', { state: { email } })
     },
   })
 

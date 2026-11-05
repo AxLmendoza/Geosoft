@@ -7,6 +7,7 @@ import { Category } from './Category'
 import { ReportFlag } from './ReportFlag'
 import { ReportHistory } from './ReportHistory'
 import { ReportVote } from './ReportVote'
+import { Area } from './Area'
 
 /**
  * paranoid: true => borrado lógico. destroy() solo llena deletedAt,
@@ -27,10 +28,14 @@ export class Report extends Model {
   @Column(DataType.STRING(255))
   declare imageUrl: string
 
-  /** Miniatura cuadrada que se muestra dentro del pin del mapa */
+  /** Miniatura cuadrada (listas, moderación) */
   @AllowNull(false)
   @Column(DataType.STRING(255))
   declare thumbUrl: string
+
+  /** Versión mediana (~640px) para tarjetas y popups. null en reportes antiguos */
+  @Column(DataType.STRING(255))
+  declare mediumUrl: string | null
 
   @AllowNull(false)
   @Column(DataType.DECIMAL(9, 6))
@@ -92,6 +97,21 @@ export class Report extends Model {
 
   @BelongsTo(() => Category)
   declare category: Category
+
+  /** Área responsable de atenderlo (asignación automática por categoría o manual) */
+  @ForeignKey(() => Area)
+  @Column(DataType.INTEGER)
+  declare areaId: number | null
+
+  @BelongsTo(() => Area, { onDelete: 'SET NULL' })
+  declare area: Area | null
+
+  @Column(DataType.DATE)
+  declare assignedAt: Date | null
+
+  /** Quién asignó el área por última vez (null = automático) */
+  @Column(DataType.INTEGER)
+  declare assignedById: number | null
 
   @HasMany(() => ReportFlag, { onDelete: 'CASCADE', hooks: true })
   declare flags: ReportFlag[]

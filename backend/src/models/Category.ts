@@ -1,5 +1,6 @@
-import { Table, Column, Model, DataType, AllowNull, Unique, HasMany } from 'sequelize-typescript'
+import { Table, Column, Model, DataType, AllowNull, Unique, HasMany, ForeignKey, BelongsTo } from 'sequelize-typescript'
 import { Report } from './Report'
+import { Area } from './Area'
 
 @Table({ tableName: 'categories', timestamps: false })
 export class Category extends Model {
@@ -19,6 +20,14 @@ export class Category extends Model {
 
   @Column(DataType.STRING(200))
   declare description: string | null
+
+  /** Área responsable por defecto: los reportes nuevos se le asignan automáticamente */
+  @ForeignKey(() => Area)
+  @Column(DataType.INTEGER)
+  declare areaId: number | null
+
+  @BelongsTo(() => Area, { onDelete: 'SET NULL' })
+  declare area: Area | null
 
   @HasMany(() => Report)
   declare reports: Report[]

@@ -1,13 +1,31 @@
 import type { Request, Response } from 'express'
-import { Op } from 'sequelize'
 import { User } from '../models/User'
 import { Blacklist } from '../models/Blacklist'
 import { AuthEmail } from '../emails/AuthEmail'
 import { checkPassword, generateJWT, generateToken, hashPassword, isTokenExpired } from '../utils/auth'
+import { clearFailures, registerFailure } from '../utils/codeAttempts'
 
-/** Busca un usuario con un código vigente */
-const findByValidToken = (token: string) =>
-  User.scope('withSecrets').findOne({ where: { token, tokenExpiresAt: { [Op.gt]: new Date() } } })
+const INVALID_CODE = 'Código no válido o expirado'
+
+/**
+ * Busca al usuario por CORREO + código vigente.
+ * Antes se buscaba solo por el código: con muchos códigos activos, adivinar 6 dígitos
+ * podía coincidir con el de otra persona. Ahora el código solo sirve para su correo
+ * y tras varios intentos fallidos se invalida.
+ */
+async function findByValidToken(emailInput: string, token: string) {
+  const email = String(emailInput).toLowerCase()
+  const user = await User.scope('withSecrets').findOne({ where: { email } })
+  const valid = !!user && user.token === token && !isTokenExpired(user.tokenExpiresAt)
+  if (valid) {
+    clearFailures(email)
+    return user
+  }
+  if (user?.token && registerFailure(email)) {
+    await user.update({ token: null, tokenExpiresAt: null })
+  }
+  return null
+}
 
 export class AuthController {
   static async createAccount(req: Request, res: Response) {
@@ -38,9 +56,9 @@ export class AuthController {
   }
 
   static async confirmAccount(req: Request, res: Response) {
-    const user = await findByValidToken(req.body.token)
+    const user = await findByValidToken(req.body.email, req.body.token)
     if (!user || user.confirmed) {
-      res.status(401).json({ error: 'Código no válido o expirado' })
+      res.status(401).json({ error: INVALID_CODE })
       return
     }
     await user.update({ confirmed: true, token: null, tokenExpiresAt: null })
@@ -97,8 +115,9 @@ export class AuthController {
 
   static async forgotPassword(req: Request, res: Response) {
     const user = await User.findOne({ where: { email: String(req.body.email).toLowerCase() } })
+    // Misma respuesta exista o no la cuenta: no revela qué correos están registrados
     if (!user) {
-      res.status(404).json({ error: 'El usuario no existe' })
+      res.json({ message: 'Si el correo está registrado, te enviamos un código' })
       return
     }
     const { token, tokenExpiresAt } = generateToken()
@@ -111,17 +130,17 @@ export class AuthController {
   }
 
   static async validateToken(req: Request, res: Response) {
-    if (!(await findByValidToken(req.body.token))) {
-      res.status(401).json({ error: 'Código no válido o expirado' })
+    if (!(await findByValidToken(req.body.email, req.body.token))) {
+      res.status(401).json({ error: INVALID_CODE })
       return
     }
     res.json({ message: 'Código válido, define tu nuevo password' })
   }
 
   static async resetPassword(req: Request, res: Response) {
-    const user = await findByValidToken(req.params.token)
+    const user = await findByValidToken(req.body.email, req.params.token)
     if (!user) {
-      res.status(401).json({ error: 'Código no válido o expirado' })
+      res.status(401).json({ error: INVALID_CODE })
       return
     }
     await user.update({

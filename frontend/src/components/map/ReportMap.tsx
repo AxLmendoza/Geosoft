@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { memo, useEffect, useRef, useState } from 'react'
 import { Marker, Popup, useMap } from 'react-map-gl/mapbox'
 import { toast } from 'react-toastify'
 import { MapPinIcon } from '@heroicons/react/24/solid'
@@ -57,6 +57,32 @@ function LocateButton({ onLocated }: { onLocated: (c: Coords) => void }) {
   )
 }
 
+/**
+ * Rendimiento: los pines son elementos DOM (uno por reporte). Se memorizan para que
+ * abrir un popup, cambiar de panel o el refresco cada minuto no vuelva a crear cientos
+ * de marcadores si la lista no cambió (React Query conserva la misma referencia).
+ */
+const Pins = memo(function Pins({ reports, onSelect }: { reports: Report[]; onSelect: (r: Report) => void }) {
+  return (
+    <>
+      {reports.map((r) => (
+        <Marker
+          key={r.id}
+          longitude={r.lng}
+          latitude={r.lat}
+          anchor="bottom"
+          onClick={(e) => {
+            e.originalEvent.stopPropagation()
+            onSelect(r)
+          }}
+        >
+          <ReportPin report={r} />
+        </Marker>
+      ))}
+    </>
+  )
+})
+
 type Props = { reports: Report[]; className?: string; fullscreen?: boolean }
 
 export default function ReportMap({ reports, className = '', fullscreen = false }: Props) {
@@ -70,22 +96,9 @@ export default function ReportMap({ reports, className = '', fullscreen = false 
 
   return (
     <div className={`relative overflow-hidden ${fullscreen ? 'h-full w-full' : 'glass rounded-2xl'} ${className}`}>
-      <BaseMap zoom={13} overlayClassName={fullscreen ? 'left-[4.5rem] top-2 md:left-[5.75rem] md:top-3' : undefined}>
+      <BaseMap zoom={13} overlayClassName={fullscreen ? 'left-2 top-2 md:left-[5.75rem] md:top-3' : undefined}>
         <FitToReports reports={reports} />
-        {reports.map((r) => (
-          <Marker
-            key={r.id}
-            longitude={r.lng}
-            latitude={r.lat}
-            anchor="bottom"
-            onClick={(e) => {
-              e.originalEvent.stopPropagation()
-              setSelected(r)
-            }}
-          >
-            <ReportPin report={r} />
-          </Marker>
-        ))}
+        <Pins reports={reports} onSelect={setSelected} />
         {selected && (
           <Popup
             longitude={selected.lng}

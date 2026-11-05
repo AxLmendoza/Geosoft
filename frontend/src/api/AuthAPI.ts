@@ -10,9 +10,10 @@ export async function createAccount(form: RegisterForm) {
   } catch (e) { rethrow(e) }
 }
 
-export async function confirmAccount(token: string) {
+/** El código siempre se valida junto con el correo al que se envió */
+export async function confirmAccount({ email, token }: { email: string; token: string }) {
   try {
-    return (await api.post<Msg>('/auth/confirm-account', { token })).data.message
+    return (await api.post<Msg>('/auth/confirm-account', { email, token })).data.message
   } catch (e) { rethrow(e) }
 }
 
@@ -34,15 +35,15 @@ export async function forgotPassword(email: string) {
   } catch (e) { rethrow(e) }
 }
 
-export async function validateToken(token: string) {
+export async function validateToken({ email, token }: { email: string; token: string }) {
   try {
-    return (await api.post<Msg>('/auth/validate-token', { token })).data.message
+    return (await api.post<Msg>('/auth/validate-token', { email, token })).data.message
   } catch (e) { rethrow(e) }
 }
 
-export async function resetPassword({ token, form }: { token: string; form: NewPasswordForm }) {
+export async function resetPassword({ email, token, form }: { email: string; token: string; form: NewPasswordForm }) {
   try {
-    return (await api.post<Msg>(`/auth/reset-password/${token}`, form)).data.message
+    return (await api.post<Msg>(`/auth/reset-password/${token}`, { ...form, email })).data.message
   } catch (e) { rethrow(e) }
 }
 

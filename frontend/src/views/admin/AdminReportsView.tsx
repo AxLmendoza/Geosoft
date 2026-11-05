@@ -1,8 +1,8 @@
-import { useMemo, useState } from 'react'
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useMemo, useState } from 'react'
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { ArrowUturnLeftIcon, EyeIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, TrashIcon, XCircleIcon } from '@heroicons/react/24/outline'
+import { ArrowUturnLeftIcon, ChevronLeftIcon, ChevronRightIcon, EyeIcon, MagnifyingGlassIcon, PencilSquareIcon, PlusIcon, TrashIcon, XCircleIcon } from '@heroicons/react/24/outline'
 import { deleteReportAsModerator, destroyAdminReport, getAdminReports, restoreReport, type AdminReportFilters } from '@/api/ModerationAPI'
 import { useCategories } from '@/hooks/useCategories'
 import { STATUS_OPTIONS } from '@/lib/labels'
@@ -11,6 +11,7 @@ import { PinStatusIcon, pinKind } from '@/components/map/pinIcons'
 import SelectBox from '@/components/ui/SelectBox'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badges'
 import ReportFormDialog from '@/components/admin/ReportFormDialog'
+import { ErrorState, RefreshingBadge, Skeleton } from '@/components/ui/States'
 import type { Report, ReportStatus } from '@/types'
 
 type Deleted = '' | 'true' | 'all'
@@ -24,9 +25,25 @@ export default function AdminReportsView() {
   const [deleted, setDeleted] = useState<Deleted>('')
   const [editing, setEditing] = useState<Report | null>(null)
   const [formOpen, setFormOpen] = useState(false)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(1)
+  const PAGE = 50
 
-  const params: AdminReportFilters = { q: q.trim() || undefined, status: status || undefined, category: category || undefined, deleted: deleted || undefined }
-  const { data: reports = [], isLoading } = useQuery({ queryKey: ['admin-reports', params], queryFn: () => getAdminReports(params) })
+  // Debounce: antes se consultaba la API con cada tecla
+  useEffect(() => {
+    const t = setTimeout(() => setQ(search), 350)
+    return () => clearTimeout(t)
+  }, [search])
+  useEffect(() => setPage(1), [q, status, category, deleted])
+
+  const params: AdminReportFilters = { q: q.trim() || undefined, status: status || undefined, category: category || undefined, deleted: deleted || undefined, page, limit: PAGE }
+  const { data, isLoading, isError, isFetching, isPlaceholderData, refetch } = useQuery({
+    queryKey: ['admin-reports', params],
+    queryFn: () => getAdminReports(params),
+    placeholderData: keepPreviousData,
+  })
+  const reports = data?.data ?? []
+  const pages = Math.ceil((data?.total ?? 0) / PAGE)
 
   const onDone = (msg: string) => {
     toast.success(msg)
@@ -50,7 +67,7 @@ export default function AdminReportsView() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-extrabold text-slate-900">Gestionar reportes</h1>
+          <h1 className="flex items-center gap-2 text-2xl font-extrabold text-slate-900 sm:text-3xl">Gestionar reportes <RefreshingBadge show={isFetching && !isLoading} /></h1>
           <p className="text-slate-500">Crea, edita, elimina o restaura cualquier reporte.</p>
         </div>
         <button onClick={() => openForm(null)} className="btn-primary">
@@ -63,7 +80,7 @@ export default function AdminReportsView() {
           <span className="mb-1 block text-xs font-bold uppercase tracking-wide text-slate-500">Buscar</span>
           <span className="relative block">
             <MagnifyingGlassIcon className="pointer-events-none absolute left-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" />
-            <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Título, descripción, calle o colonia" className="input !py-2 pl-10" />
+            <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Título, descripción, calle o colonia" className="input !py-2 pl-10" />
           </span>
         </label>
         <SelectBox label="Estado" value={status} onChange={setStatus} className="lg:w-44" options={[{ value: '' as const, label: 'Todos' }, ...STATUS_OPTIONS]} />
@@ -81,12 +98,13 @@ export default function AdminReportsView() {
         />
       </section>
 
-      <div className="glass overflow-x-auto rounded-2xl">
-        <table className="w-full min-w-[820px] text-left text-sm">
+      <div className={`glass overflow-x-auto rounded-2xl transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
+        <table className="w-full min-w-[960px] text-left text-sm">
           <thead className="bg-white/40 text-xs uppercase text-slate-500">
             <tr>
               <th className="px-4 py-3">Reporte</th>
               <th className="px-4 py-3">Estado</th>
+              <th className="px-4 py-3">Área</th>
               <th className="px-4 py-3">Ubicación</th>
               <th className="px-4 py-3">Autor</th>
               <th className="px-4 py-3">Fecha</th>
@@ -113,6 +131,7 @@ export default function AdminReportsView() {
                     {r.deletedAt && <span className="rounded bg-red-600 px-1.5 text-xs font-bold text-white">Eliminado</span>}
                   </div>
                 </td>
+                <td className="max-w-44 truncate px-4 py-3 text-slate-600">{r.area?.name ?? <span className="text-amber-600">Sin área</span>}</td>
                 <td className="max-w-48 truncate px-4 py-3 text-slate-600">{[r.calle, r.colonia].filter(Boolean).join(', ') || `${r.lat.toFixed(4)}, ${r.lng.toFixed(4)}`}</td>
                 <td className="px-4 py-3 text-slate-600">
                   {r.author?.name ?? '—'}
@@ -153,9 +172,19 @@ export default function AdminReportsView() {
             ))}
           </tbody>
         </table>
-        {isLoading && <p className="p-8 text-center text-slate-500">Cargando…</p>}
-        {!isLoading && reports.length === 0 && <p className="p-8 text-center text-slate-500">Sin reportes con estos filtros</p>}
+        {isLoading && <div className="space-y-2 p-4">{Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-12 w-full" />)}</div>}
+        {isError && <div className="p-4"><ErrorState onRetry={() => refetch()} /></div>}
+        {!isLoading && !isError && reports.length === 0 && <p className="p-8 text-center text-slate-500">Sin reportes con estos filtros</p>}
       </div>
+      {pages > 1 && (
+        <nav className="flex items-center justify-between text-sm" aria-label="Paginación">
+          <p className="text-slate-500">{data?.total} reportes · página {page} de {pages}</p>
+          <div className="flex gap-2">
+            <button disabled={page <= 1} onClick={() => setPage((p) => p - 1)} className="btn-sm bg-white/70 px-3 py-2 ring-1 ring-slate-200 disabled:opacity-40" aria-label="Anterior"><ChevronLeftIcon className="size-4" /></button>
+            <button disabled={page >= pages} onClick={() => setPage((p) => p + 1)} className="btn-sm bg-white/70 px-3 py-2 ring-1 ring-slate-200 disabled:opacity-40" aria-label="Siguiente"><ChevronRightIcon className="size-4" /></button>
+          </div>
+        </nav>
+      )}
 
       <ReportFormDialog open={formOpen} report={editing} onClose={() => setFormOpen(false)} />
     </div>

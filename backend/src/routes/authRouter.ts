@@ -19,6 +19,9 @@ const passwordRules = [
   }),
 ]
 
+const emailRule = () =>
+  body('email').isEmail().withMessage('Correo no válido').normalizeEmail({ gmail_remove_dots: false })
+
 router.use(authLimiter)
 
 router.post(
@@ -30,7 +33,8 @@ router.post(
   ah(AuthController.createAccount),
 )
 
-router.post('/confirm-account', tokenRule(body('token')), handleInputErrors, ah(AuthController.confirmAccount))
+// El código siempre se valida junto con el correo al que se envió
+router.post('/confirm-account', emailRule(), tokenRule(body('token')), handleInputErrors, ah(AuthController.confirmAccount))
 
 router.post(
   '/request-code',
@@ -54,11 +58,12 @@ router.post(
   ah(AuthController.forgotPassword),
 )
 
-router.post('/validate-token', tokenRule(body('token')), handleInputErrors, ah(AuthController.validateToken))
+router.post('/validate-token', emailRule(), tokenRule(body('token')), handleInputErrors, ah(AuthController.validateToken))
 
 router.post(
   '/reset-password/:token',
   param('token').isLength({ min: 6, max: 6 }).isNumeric().withMessage('Código no válido'),
+  emailRule(),
   ...passwordRules,
   handleInputErrors,
   ah(AuthController.resetPassword),

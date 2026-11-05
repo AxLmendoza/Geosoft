@@ -12,7 +12,8 @@
     "db:clear": "ts-node src/scripts/db.ts clear",
     "db:reset": "ts-node src/scripts/db.ts reset",
     "db:demo": "ts-node src/scripts/db.ts demo",
-    "db:purge-uploads": "ts-node src/scripts/db.ts purge-uploads"
+    "db:purge-uploads": "ts-node src/scripts/db.ts purge-uploads",
+    "mail:test": "ts-node src/scripts/mailTest.ts"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

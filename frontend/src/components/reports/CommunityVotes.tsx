@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { voteReport } from '@/api/ReportAPI'
 import { useAuth } from '@/hooks/useAuth'
+import { isClosed } from '@/lib/labels'
 import type { Report, VoteValue } from '@/types'
 
 /**
@@ -15,7 +16,7 @@ export default function CommunityVotes({ report, compact = false }: { report: Re
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const { votes } = report
-  const closed = report.status === 'resuelto' || report.status === 'rechazado'
+  const closed = isClosed(report.status)
   const disabled = closed || report.isOwner
 
   const { mutate, isPending } = useMutation({
@@ -24,6 +25,7 @@ export default function CommunityVotes({ report, compact = false }: { report: Re
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['reports'] })
       queryClient.invalidateQueries({ queryKey: ['report', report.id] })
+      queryClient.invalidateQueries({ queryKey: ['moderation-reports'] })
     },
   })
 

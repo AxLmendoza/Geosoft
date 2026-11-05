@@ -1,8 +1,9 @@
 import {
-  Table, Column, Model, DataType, Default, Unique, AllowNull, HasMany, DefaultScope, Scopes,
+  Table, Column, Model, DataType, Default, Unique, AllowNull, HasMany, DefaultScope, Scopes, ForeignKey, BelongsTo,
 } from 'sequelize-typescript'
 import { ROLES, type Role } from './constants'
 import { Report } from './Report'
+import { Area } from './Area'
 
 @DefaultScope(() => ({
   attributes: { exclude: ['password', 'token', 'tokenExpiresAt'] },
@@ -49,6 +50,14 @@ export class User extends Model {
 
   @Column(DataType.DATE)
   declare bannedAt: Date | null
+
+  /** Área a la que pertenece el personal operativo */
+  @ForeignKey(() => Area)
+  @Column(DataType.INTEGER)
+  declare areaId: number | null
+
+  @BelongsTo(() => Area, { onDelete: 'SET NULL' })
+  declare area: Area | null
 
   @HasMany(() => Report)
   declare reports: Report[]

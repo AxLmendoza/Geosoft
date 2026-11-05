@@ -1,13 +1,18 @@
 import type { Request, Response } from 'express'
 import { User } from '../models/User'
 import { Report } from '../models/Report'
+import { Area } from '../models/Area'
+import type { Role } from '../models/constants'
 import { computeStats } from '../utils/stats'
 import { buildStatsPdf } from '../utils/pdfReport'
 
 const range = (req: Request) => ({ from: req.query.from as string | undefined, to: req.query.to as string | undefined })
 
 export class AdminController {
-  /** Asigna o quita el rol de moderador */
+  /**
+   * Cambia el rol de un usuario: ciudadano, moderador u operativo (este último requiere un área).
+   * El rol de administrador no se asigna desde aquí.
+   */
   static async setRole(req: Request, res: Response) {
     const target = await User.findByPk(req.params.userId)
     if (!target) {
@@ -22,14 +27,30 @@ export class AdminController {
       res.status(400).json({ error: 'El usuario debe estar confirmado y no baneado' })
       return
     }
-    await target.update({ role: req.body.role })
-    res.json({ message: req.body.role === 'moderador' ? `${target.name} ahora es moderador` : `${target.name} ya no es moderador` })
+    const role = req.body.role as Role
+    let areaId: number | null = null
+    if (role === 'operativo') {
+      const area = await Area.findByPk(req.body.areaId)
+      if (!area || !area.active) {
+        res.status(400).json({ error: 'Selecciona un área activa para el personal operativo' })
+        return
+      }
+      areaId = area.id
+    }
+    await target.update({ role, areaId })
+    const msg: Record<string, string> = {
+      ciudadano: `${target.name} ahora es ciudadano`,
+      moderador: `${target.name} ahora es moderador`,
+      operativo: `${target.name} ahora es personal operativo`,
+    }
+    res.json({ message: msg[role] })
   }
 
   /** Datos del dashboard (?from=YYYY-MM-DD&to=YYYY-MM-DD, por defecto últimos 12 meses) */
   static async stats(req: Request, res: Response) {
-    const { reports, ...stats } = await computeStats(range(req))
-    res.json({ ...stats, recent: reports.slice(0, 20) })
+    // El detalle completo solo se usa en el PDF: no se manda al dashboard
+    const { reports: _detail, ...stats } = await computeStats(range(req))
+    res.json(stats)
   }
 
   /** Descarga el informe en PDF con gráficas y el detalle de reportes */

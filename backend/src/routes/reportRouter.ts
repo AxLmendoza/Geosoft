@@ -20,6 +20,7 @@ router.get(
   query('severity').optional().isIn([...SEVERITY]),
   query('from').optional().isISO8601(),
   query('to').optional().isISO8601(),
+  query('limit').optional().isInt({ min: 1, max: 1000 }),
   handleInputErrors,
   ah(ReportController.getAll),
 )
@@ -55,6 +56,17 @@ router.patch(
   body('note').optional().trim().isLength({ max: 300 }),
   handleInputErrors,
   ah(ReportController.ownerStatus),
+)
+
+// El autor agrega información adicional (texto y/o foto) a su reporte
+router.post(
+  '/:reportId/updates',
+  authenticate,
+  uploadImage,
+  reportId,
+  body('note').optional().trim().isLength({ max: 600 }).withMessage('Máximo 600 caracteres'),
+  handleInputErrors,
+  ah(ReportController.addInfo),
 )
 
 // La comunidad: 👏 ya quedó / sigue igual

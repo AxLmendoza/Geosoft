@@ -1,5 +1,22 @@
-export type Role = 'ciudadano' | 'moderador' | 'admin'
-export type ReportStatus = 'pendiente' | 'en_revision' | 'en_proceso' | 'resuelto' | 'rechazado'
+export type Role = 'ciudadano' | 'moderador' | 'admin' | 'operativo'
+export type ReportStatus = 'pendiente' | 'en_revision' | 'asignado' | 'en_proceso' | 'resuelto' | 'cerrado' | 'rechazado' | 'canalizado'
+export type AreaType = 'municipal' | 'organismo' | 'externa'
+export type HistoryKind = 'estado' | 'asignacion' | 'nota' | 'evidencia' | 'ciudadano'
+
+export type AreaRef = { id: number; name: string; type?: AreaType }
+
+export type Area = {
+  id: number
+  name: string
+  slug: string
+  type: AreaType
+  description: string | null
+  contactEmail: string | null
+  active: boolean
+  membersCount?: number
+  categoriesCount?: number
+  openReports?: number
+}
 export type Severity = 'baja' | 'media' | 'alta' | 'critica'
 export type FlagReason = 'informacion_falsa' | 'imagen_inapropiada' | 'spam_basura' | 'duplicado' | 'otro'
 export type FlagStatus = 'pendiente' | 'procedente' | 'descartada'
@@ -18,6 +35,7 @@ export type User = {
   bannedAt: string | null
   createdAt: string
   reportsCount?: number
+  areaId?: number | null
 }
 
 export type Category = {
@@ -26,17 +44,27 @@ export type Category = {
   slug: string
   color: string
   description?: string | null
+  areaId?: number | null
+  area?: AreaRef | null
 }
 
 export type Author = { id: number; name: string; email?: string; banned?: boolean } | null
 
 export type ReportHistoryItem = {
   id: number
+  kind: HistoryKind
   fromStatus: ReportStatus | null
   toStatus: ReportStatus
   note: string | null
+  internal: boolean
+  imageUrl: string | null
+  thumbUrl: string | null
+  fromArea: AreaRef | null
+  toArea: AreaRef | null
   createdAt: string
-  changedBy: { id?: number; name?: string; role: Role } | null
+  isYou: boolean
+  /** null = movimiento automático del sistema */
+  changedBy: { id?: number; name?: string; role: Role; area: AreaRef | null } | null
 }
 
 export type Report = {
@@ -45,6 +73,8 @@ export type Report = {
   description: string
   imageUrl: string
   thumbUrl: string
+  /** Versión ~640px para tarjetas (null en reportes antiguos) */
+  mediumUrl?: string | null
   lat: number
   lng: number
   colonia: string | null
@@ -58,6 +88,10 @@ export type Report = {
   category: Pick<Category, 'id' | 'name' | 'slug' | 'color'>
   author: Author
   isOwner: boolean
+  /** El usuario actual puede atenderlo (admin, moderación o su área) */
+  canManage: boolean
+  area: AreaRef | null
+  assignedAt?: string | null
   votes: VoteSummary
   /** Fecha en que se marcó como resuelto */
   resolvedAt: string | null
@@ -124,12 +158,23 @@ export type AdminStats = {
     votos: number
     usuarios: number
     moderadores: number
+    operativos: number
     baneados: number
     denunciasPendientes: number
   }
   monthly: { month: string; reportados: number; resueltos: number }[]
   byCategory: { id: number; name: string; color: string; total: number; resueltos: number; abiertos: number }[]
+  byArea: { id: number | null; name: string; type: AreaType | null; total: number; abiertos: number; resueltos: number; promedioHorasSolucion: number | null }[]
   byStatus: { status: ReportStatus; total: number }[]
   bySeverity: { severity: Severity; total: number }[]
   priorityZones: { colonia: string; abiertos: number; criticos: number; indice: number }[]
+}
+
+export type Paginated<T> = { data: T[]; total: number; page: number; pages: number }
+
+export type AttentionSummary = {
+  byStatus: { status: ReportStatus; total: number }[]
+  total: number
+  open: number
+  area: AreaRef | null
 }

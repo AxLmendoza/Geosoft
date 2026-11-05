@@ -1,14 +1,63 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'react-toastify'
-import { MagnifyingGlassIcon, NoSymbolIcon, ShieldCheckIcon, ShieldExclamationIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
+import { MagnifyingGlassIcon, NoSymbolIcon, UserGroupIcon, ArrowUturnLeftIcon } from '@heroicons/react/24/outline'
 import { getUsers, setUserRole, unbanUser } from '@/api/ModerationAPI'
+import { getPublicAreas } from '@/api/AttentionAPI'
+import Modal from '@/components/ui/Modal'
 import { useAuth } from '@/hooks/useAuth'
 import { ROLE } from '@/lib/labels'
 import { formatShortDate } from '@/lib/date'
 import SelectBox from '@/components/ui/SelectBox'
 import BanDialog from './BanDialog'
 import type { Role, User } from '@/types'
+
+type AssignableRole = 'ciudadano' | 'moderador' | 'operativo'
+
+/** Solo admin: cambia el rol; el personal operativo debe tener un área */
+function RoleDialog({ user, onClose }: { user: User | null; onClose: () => void }) {
+  const queryClient = useQueryClient()
+  const [role, setRole] = useState<AssignableRole>('ciudadano')
+  const [areaId, setAreaId] = useState(0)
+  const { data: areas = [] } = useQuery({ queryKey: ['areas', 'public'], queryFn: getPublicAreas, enabled: !!user, staleTime: 5 * 60_000 })
+  useEffect(() => {
+    if (!user) return
+    setRole(user.role === 'admin' ? 'ciudadano' : user.role)
+    setAreaId(user.areaId ?? 0)
+  }, [user])
+  const areaOptions = useMemo(() => [{ value: 0, label: 'Selecciona un área…' }, ...areas.map((a) => ({ value: a.id, label: a.name }))], [areas])
+  const { mutate, isPending } = useMutation({
+    mutationFn: setUserRole,
+    onError: (e) => toast.error(e.message),
+    onSuccess: (msg) => {
+      toast.success(msg)
+      queryClient.invalidateQueries({ queryKey: ['users'] })
+      onClose()
+    },
+  })
+  return (
+    <Modal open={!!user} onClose={onClose} title="Cambiar rol">
+      {user && (
+        <div className="space-y-4">
+          <p className="text-sm text-slate-600"><b>{user.name}</b> · {user.email}</p>
+          <SelectBox label="Rol" value={role} onChange={setRole} options={[
+            { value: 'ciudadano', label: ROLE.ciudadano },
+            { value: 'operativo', label: `${ROLE.operativo} (atiende reportes de su área)` },
+            { value: 'moderador', label: `${ROLE.moderador} (modera contenido)` },
+          ]} />
+          {role === 'operativo' && <SelectBox label="Área" value={areaId} onChange={setAreaId} options={areaOptions} />}
+          <button
+            disabled={isPending || (role === 'operativo' && !areaId)}
+            onClick={() => mutate({ id: user.id, role, areaId: role === 'operativo' ? areaId : undefined })}
+            className="btn-primary w-full"
+          >
+            {isPending ? 'Guardando…' : 'Guardar rol'}
+          </button>
+        </div>
+      )}
+    </Modal>
+  )
+}
 
 export default function UsersPanel() {
   const queryClient = useQueryClient()
@@ -18,6 +67,7 @@ export default function UsersPanel() {
   const [role, setRole] = useState<Role | ''>('')
   const [banned, setBanned] = useState<'' | 'true' | 'false'>('')
   const [banTarget, setBanTarget] = useState<User | null>(null)
+  const [roleTarget, setRoleTarget] = useState<User | null>(null)
 
   // Espera a que el usuario deje de escribir
   useEffect(() => {
@@ -33,7 +83,6 @@ export default function UsersPanel() {
     queryClient.invalidateQueries()
   }
   const unban = useMutation({ mutationFn: unbanUser, onError: (e) => toast.error(e.message), onSuccess: onDone })
-  const changeRole = useMutation({ mutationFn: setUserRole, onError: (e) => toast.error(e.message), onSuccess: onDone })
 
   /** Moderador solo sanciona ciudadanos; admin a todos menos admins */
   const canSanction = (u: User) => u.id !== me?.id && u.role !== 'admin' && (isAdmin || u.role === 'ciudadano')
@@ -48,6 +97,7 @@ export default function UsersPanel() {
         <SelectBox value={role} onChange={setRole} className="w-44" options={[
           { value: '' as const, label: 'Todos los roles' },
           { value: 'ciudadano' as const, label: 'Ciudadanos' },
+          { value: 'operativo' as const, label: 'Personal operativo' },
           { value: 'moderador' as const, label: 'Moderadores' },
           { value: 'admin' as const, label: 'Administradores' },
         ]} />
@@ -88,15 +138,9 @@ export default function UsersPanel() {
                 <td className="px-4 py-3">
                   <div className="flex justify-end gap-1.5">
                     {isAdmin && u.role !== 'admin' && !u.banned && u.confirmed && (
-                      u.role === 'moderador' ? (
-                        <button onClick={() => changeRole.mutate({ id: u.id, role: 'ciudadano' })} className="btn-sm ring-1 ring-slate-300 hover:bg-slate-50">
-                          <ShieldExclamationIcon className="size-4" /> Quitar moderador
-                        </button>
-                      ) : (
-                        <button onClick={() => changeRole.mutate({ id: u.id, role: 'moderador' })} className="btn-sm text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50">
-                          <ShieldCheckIcon className="size-4" /> Hacer moderador
-                        </button>
-                      )
+                      <button onClick={() => setRoleTarget(u)} className="btn-sm text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50">
+                        <UserGroupIcon className="size-4" /> Rol
+                      </button>
                     )}
                     {canSanction(u) && (u.banned ? (
                       <button onClick={() => unban.mutate(u.id)} className="btn-sm text-emerald-700 ring-1 ring-emerald-200 hover:bg-emerald-50">
@@ -116,6 +160,7 @@ export default function UsersPanel() {
         {!isLoading && users.length === 0 && <p className="p-8 text-center text-slate-500">Sin resultados</p>}
       </div>
       <BanDialog user={banTarget} onClose={() => setBanTarget(null)} />
+      <RoleDialog user={roleTarget} onClose={() => setRoleTarget(null)} />
     </div>
   )
 }

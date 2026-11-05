@@ -2,6 +2,9 @@ import { isSandboxSmtp, transporter } from '../config/mailer'
 
 type EmailUser = { name: string; email: string; token: string }
 
+/** El nombre lo escribe el usuario: se escapa para que no inyecte HTML en el correo */
+const esc = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCodeAt(0)};`)
+
 const layout = (title: string, body: string) => `
 <div style="font-family:Arial,sans-serif;max-width:480px;margin:auto;padding:24px;border:1px solid #e5e7eb;border-radius:12px">
   <h2 style="color:#4338ca;margin-top:0">GeoScript</h2>
@@ -41,10 +44,10 @@ export class AuthEmail {
       user,
       'GeoScript - Confirma tu cuenta',
       layout(
-        `Hola ${user.name}, confirma tu cuenta`,
+        `Hola ${esc(user.name)}, confirma tu cuenta`,
         `<p>Ingresa este código en la aplicación. Caduca en <b>${ttl()} minutos</b>.</p>
          ${codeBox(user.token)}
-         <p><a href="${front()}/auth/confirm-account">Ir a confirmar mi cuenta</a></p>`,
+         <p><a href="${front()}/auth/confirm-account?email=${encodeURIComponent(user.email)}">Ir a confirmar mi cuenta</a></p>`,
       ),
     )
   }
@@ -54,10 +57,10 @@ export class AuthEmail {
       user,
       'GeoScript - Restablece tu password',
       layout(
-        `Hola ${user.name}, restablece tu password`,
+        `Hola ${esc(user.name)}, restablece tu password`,
         `<p>Usa este código para crear un nuevo password. Caduca en <b>${ttl()} minutos</b>.</p>
          ${codeBox(user.token)}
-         <p><a href="${front()}/auth/new-password">Restablecer password</a></p>`,
+         <p><a href="${front()}/auth/new-password?email=${encodeURIComponent(user.email)}">Restablecer password</a></p>`,
       ),
     )
   }

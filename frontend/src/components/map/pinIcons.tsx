@@ -10,8 +10,10 @@ const PIN_KINDS = {
 } satisfies Record<PinKind, unknown>
 
 /** Resuelto · gravedad crítica · cualquier otro reporte abierto (advertencia) */
+const isDone = (s: Report['status']) => s === 'resuelto' || s === 'cerrado'
+
 export function pinKind(report: Pick<Report, 'status' | 'severity'>): PinKind {
-  if (report.status === 'resuelto') return 'resuelto'
+  if (isDone(report.status)) return 'resuelto'
   if (report.severity === 'critica') return 'critica'
   return 'advertencia'
 }
@@ -30,8 +32,8 @@ export const PIN_LEGEND = (Object.keys(PIN_KINDS) as PinKind[]).map((kind) => ({
  */
 export function ReportPin({ report }: { report: Report }) {
   const color = report.category?.color ?? '#4f46e5'
-  const critical = report.severity === 'critica' && report.status !== 'resuelto' ? ' gs-pin--critical' : ''
-  const resolved = report.status === 'resuelto' ? ' gs-pin--resolved' : ''
+  const critical = report.severity === 'critica' && !isDone(report.status) ? ' gs-pin--critical' : ''
+  const resolved = isDone(report.status) ? ' gs-pin--resolved' : ''
   return (
     <div className="gs-pin-wrapper" style={{ width: 56, height: 68 }} title={report.title}>
       <div className={`gs-pin${critical}${resolved}`} style={{ '--pin-color': color } as React.CSSProperties}>

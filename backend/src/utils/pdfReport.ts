@@ -28,11 +28,14 @@ const C = {
 }
 
 const STATUS_LABEL: Record<string, string> = {
-  pendiente: 'Pendiente',
-  en_revision: 'En revisión',
-  en_proceso: 'En proceso',
+  pendiente: 'Recibido',
+  en_revision: 'En validación',
+  asignado: 'Asignado',
+  en_proceso: 'En atención',
   resuelto: 'Resuelto',
-  rechazado: 'Rechazado',
+  cerrado: 'Cerrado',
+  rechazado: 'No procedente',
+  canalizado: 'Canalizado',
 }
 const SEVERITY_LABEL: Record<string, string> = { baja: 'Baja', media: 'Media', alta: 'Alta', critica: 'Crítica' }
 
@@ -201,9 +204,9 @@ function cover(doc: Doc, stats: Stats, generatedBy: string) {
   })
   doc.y -= 2 * th + gap + 18
 
-  doc.text(`Rechazados: ${t.rechazados}  ·  Ocultos por moderación: ${t.ocultos}  ·  Votos de la comunidad: ${t.votos}`, M, doc.y, { size: 8, color: C.muted })
+  doc.text(`No procedentes: ${t.rechazados}  ·  Ocultos por moderación: ${t.ocultos}  ·  Votos de la comunidad: ${t.votos}`, M, doc.y, { size: 8, color: C.muted })
   doc.y -= 12
-  doc.text(`Usuarios: ${t.usuarios} (moderadores: ${t.moderadores}, baneados: ${t.baneados})  ·  Denuncias pendientes: ${t.denunciasPendientes}`, M, doc.y, { size: 8, color: C.muted })
+  doc.text(`Usuarios: ${t.usuarios} (moderadores: ${t.moderadores}, operativos: ${t.operativos}, baneados: ${t.baneados})  ·  Denuncias pendientes: ${t.denunciasPendientes}`, M, doc.y, { size: 8, color: C.muted })
   doc.y -= 14
 }
 
@@ -241,7 +244,7 @@ function monthlyChart(doc: Doc, stats: Stats) {
 
 function categoryChart(doc: Doc, stats: Stats) {
   const rows = stats.byCategory
-  doc.heading('Reportes por categoría', 'Abiertos, resueltos y rechazados por tipo de problema')
+  doc.heading('Reportes por categoría', 'Abiertos, resueltos y otros cierres por tipo de problema')
   if (!rows.length) {
     doc.text('Sin datos en el periodo.', M, doc.y, { size: 9, color: C.muted })
     doc.y -= 20
@@ -252,7 +255,7 @@ function categoryChart(doc: Doc, stats: Stats) {
     [
       { label: 'Abiertos', color: C.s1 },
       { label: 'Resueltos', color: C.s2 },
-      { label: 'Rechazados', color: C.s3 },
+      { label: 'No procedentes / canalizados', color: C.s3 },
     ],
     M,
     doc.y,
@@ -343,7 +346,7 @@ export async function buildStatsPdf(stats: Stats, generatedBy: string) {
   monthlyChart(doc, stats)
   categoryChart(doc, stats)
 
-  simpleBars(doc, 'Reportes por estado', stats.byStatus.map((s) => ({ label: STATUS_LABEL[s.status], value: s.total })))
+  simpleBars(doc, 'Reportes por estado', stats.byStatus.map((s) => ({ label: STATUS_LABEL[s.status] ?? s.status, value: s.total })))
   simpleBars(doc, 'Reportes por gravedad', stats.bySeverity.map((s) => ({ label: SEVERITY_LABEL[s.severity], value: s.total })))
 
   doc.heading('Zonas prioritarias', 'Índice = suma de la gravedad de los reportes abiertos (baja 1 · media 2 · alta 3 · crítica 5)')
@@ -362,6 +365,21 @@ export async function buildStatsPdf(stats: Stats, generatedBy: string) {
   } else {
     doc.text('No hay reportes abiertos en el periodo.', M, doc.y, { size: 9, color: C.muted })
     doc.y -= 20
+  }
+
+  doc.heading('Reportes por área responsable', 'Carga de trabajo y tiempo promedio de solución de cada área o dependencia')
+  if (stats.byArea.length) {
+    table(
+      doc,
+      [
+        { title: 'Área', width: 251 },
+        { title: 'Total', width: 65, align: 'right' },
+        { title: 'Abiertos', width: 65, align: 'right' },
+        { title: 'Resueltos', width: 65, align: 'right' },
+        { title: 'Prom. solución', width: 65, align: 'right' },
+      ],
+      stats.byArea.map((a) => [a.name, String(a.total), String(a.abiertos), String(a.resueltos), fmtHours(a.promedioHorasSolucion)]),
+    )
   }
 
   doc.addPage()
@@ -384,7 +402,7 @@ export async function buildStatsPdf(stats: Stats, generatedBy: string) {
       r.title,
       r.category,
       r.colonia ?? '—',
-      r.deletedAt ? 'Eliminado' : `${STATUS_LABEL[r.status]}${r.hidden ? ' (oculto)' : ''}`,
+      r.deletedAt ? 'Eliminado' : `${STATUS_LABEL[r.status] ?? r.status}${r.hidden ? ' (oculto)' : ''}`,
       SEVERITY_LABEL[r.severity],
       r.resolvedAt ? fmtDate(r.resolvedAt) : '—',
     ]),

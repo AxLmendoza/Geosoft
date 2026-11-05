@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import { CalendarDaysIcon, MapPinIcon, UserCircleIcon } from '@heroicons/react/20/solid'
-import { assetUrl } from '@/lib/media'
+import { cardImage } from '@/lib/media'
 import { formatDateTime, timeAgo } from '@/lib/date'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badges'
 import CategoryIcon from '@/components/CategoryIcon'
@@ -11,7 +11,7 @@ import type { Report } from '@/types'
 export default function ReportPopup({ report }: { report: Report }) {
   return (
     <div className="w-64 overflow-hidden">
-      <img src={assetUrl(report.imageUrl)} alt={report.title} className="h-40 w-full object-cover" loading="lazy" />
+      <img src={cardImage(report)} alt={report.title} className="h-40 w-full object-cover" loading="lazy" decoding="async" />
       <div className="space-y-2 p-3">
         <span
           className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-xs font-bold text-white"

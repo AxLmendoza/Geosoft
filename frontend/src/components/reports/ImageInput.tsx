@@ -3,6 +3,7 @@ import { useDropzone, type FileRejection } from 'react-dropzone'
 import { CameraIcon, PhotoIcon, VideoCameraIcon, XMarkIcon, CloudArrowUpIcon } from '@heroicons/react/24/outline'
 import { useIsMobile } from '@/hooks/useIsMobile'
 import CameraDialog from './CameraDialog'
+import { compressImage } from '@/lib/media'
 
 const MAX_MB = 8
 
@@ -18,22 +19,27 @@ export default function ImageInput({ value, onChange, error }: Props) {
   const galleryInput = useRef<HTMLInputElement>(null)
   const [webcamOpen, setWebcamOpen] = useState(false)
   const [rejection, setRejection] = useState<string | null>(null)
+  const [processing, setProcessing] = useState(false)
 
   const preview = useMemo(() => (value ? URL.createObjectURL(value) : null), [value])
   useEffect(() => () => { if (preview) URL.revokeObjectURL(preview) }, [preview])
 
-  const accept = (file?: File) => {
+  // Las fotos del celular (5–12 MB) se reducen en el navegador antes de validar el tamaño y subirlas
+  const accept = async (file?: File) => {
     if (!file) return
     if (!file.type.startsWith('image/')) return setRejection('El archivo debe ser una imagen')
-    if (file.size > MAX_MB * 1024 * 1024) return setRejection(`La imagen supera ${MAX_MB} MB`)
+    setProcessing(true)
+    const small = await compressImage(file)
+    setProcessing(false)
+    if (small.size > MAX_MB * 1024 * 1024) return setRejection(`La imagen supera ${MAX_MB} MB`)
     setRejection(null)
-    onChange(file)
+    onChange(small)
   }
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: { 'image/*': ['.jpg', '.jpeg', '.png', '.webp', '.heic', '.heif'] },
     maxFiles: 1,
-    maxSize: MAX_MB * 1024 * 1024,
+    // Sin maxSize aquí: la foto se comprime primero y luego se valida el tamaño
     multiple: false,
     onDropAccepted: (files) => accept(files[0]),
     onDropRejected: (rejections: FileRejection[]) =>
@@ -57,6 +63,14 @@ export default function ImageInput({ value, onChange, error }: Props) {
   }
 
   const message = rejection ?? error
+
+  if (processing) {
+    return (
+      <div role="status" className="flex items-center justify-center gap-2 rounded-2xl bg-white/50 px-6 py-10 text-sm font-bold text-indigo-700">
+        <span className="size-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" /> Preparando la foto…
+      </div>
+    )
+  }
 
   if (isMobile) {
     return (

@@ -26,7 +26,7 @@ export default function ReloadPrompt() {
   }
 
   return (
-    <div className="fixed inset-x-3 bottom-6 z-[1400] mx-auto max-w-sm rounded-2xl border border-white/10 bg-slate-900/75 p-4 text-white shadow-2xl backdrop-blur-xl" role="alert">
+    <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6 z-[1400] mx-auto max-w-sm rounded-2xl border border-white/10 bg-slate-900/75 p-4 text-white shadow-2xl backdrop-blur-xl" role="alert">
       <div className="flex items-start gap-3">
         {needRefresh ? <ArrowPathIcon className="size-6 shrink-0 text-indigo-300" /> : <CheckCircleIcon className="size-6 shrink-0 text-emerald-400" />}
         <p className="flex-1 text-sm">

@@ -6,6 +6,7 @@ process.env.TZ = process.env.APP_TIMEZONE ?? 'America/Mexico_City'
 import app from './server'
 import { connectDB } from './config/db'
 import { seed } from './utils/seed'
+import { checkMailer } from './config/mailer'
 
 const port = Number(process.env.PORT ?? 4000)
 
@@ -13,6 +14,7 @@ async function main() {
   await connectDB()
   await seed()
   app.listen(port, () => console.log(`✔ API de GeoScript en http://localhost:${port}`))
+  void checkMailer()
 }
 
 main().catch((err) => {

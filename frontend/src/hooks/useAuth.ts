@@ -17,6 +17,9 @@ export function useAuth() {
     isLoading: hasToken && isLoading,
     isStaff: user?.role === 'moderador' || user?.role === 'admin',
     isAdmin: user?.role === 'admin',
+    isOperativo: user?.role === 'operativo',
+    /** Puede entrar a la bandeja de atención (el backend limita el alcance por área) */
+    canAttend: user?.role === 'admin' || user?.role === 'moderador' || user?.role === 'operativo',
   }
 }
 

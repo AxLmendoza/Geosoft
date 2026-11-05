@@ -42,7 +42,7 @@ export function CategoryChart({ data }: { data: AdminStats['byCategory'] }) {
         {/* stroke blanco = 2px de separación entre segmentos */}
         <Bar dataKey="abiertos" name="Abiertos" stackId="a" fill={SERIES.reportados} stroke="#fff" strokeWidth={2} />
         <Bar dataKey="resueltos" name="Resueltos" stackId="a" fill={SERIES.resueltos} stroke="#fff" strokeWidth={2} />
-        <Bar dataKey="rechazados" name="Rechazados" stackId="a" fill={SERIES.rechazados} stroke="#fff" strokeWidth={2} radius={[0, 4, 4, 0]}>
+        <Bar dataKey="rechazados" name="No procedentes / canalizados" stackId="a" fill={SERIES.rechazados} stroke="#fff" strokeWidth={2} radius={[0, 4, 4, 0]}>
           <LabelList dataKey="total" position="right" style={{ fontSize: 12, fontWeight: 700, fill: '#0f172a' }} />
         </Bar>
       </BarChart>

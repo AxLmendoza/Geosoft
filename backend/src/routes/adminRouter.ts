@@ -2,10 +2,11 @@ import { Router } from 'express'
 import { body, param, query } from 'express-validator'
 import { AdminController } from '../controllers/AdminController'
 import { AdminReportController } from '../controllers/AdminReportController'
+import { AreaController } from '../controllers/AreaController'
 import { authenticate, requireRole } from '../middleware/auth'
 import { handleInputErrors } from '../middleware/validation'
 import { uploadImage } from '../middleware/upload'
-import { REPORT_STATUS, SEVERITY } from '../models/constants'
+import { AREA_TYPES, REPORT_STATUS, SEVERITY } from '../models/constants'
 import { ah } from '../utils/asyncHandler'
 
 const router = Router()
@@ -21,10 +22,33 @@ const rangeRules = [
 router.patch(
   '/users/:userId/role',
   param('userId').isInt(),
-  body('role').isIn(['ciudadano', 'moderador']).withMessage('Rol no válido'),
+  body('role').isIn(['ciudadano', 'moderador', 'operativo']).withMessage('Rol no válido'),
+  body('areaId').if(body('role').equals('operativo')).isInt().withMessage('Selecciona el área del personal operativo').toInt(),
   handleInputErrors,
   ah(AdminController.setRole),
 )
+
+// ---------- Áreas y categorías (configurables sin tocar código) ----------
+const areaRules = (required: boolean) => [
+  (required ? body('name') : body('name').optional()).trim().isLength({ min: 3, max: 120 }).withMessage('El nombre debe tener entre 3 y 120 caracteres'),
+  body('type').optional().isIn([...AREA_TYPES]).withMessage('Tipo de área no válido'),
+  body('description').optional({ values: 'null' }).trim().isLength({ max: 300 }),
+  body('contactEmail').optional({ values: 'falsy' }).isEmail().withMessage('Correo de contacto no válido').normalizeEmail({ gmail_remove_dots: false }),
+  body('active').optional().isBoolean().toBoolean(),
+]
+router.get('/areas', ah(AreaController.list))
+router.post('/areas', ...areaRules(true), handleInputErrors, ah(AreaController.create))
+router.put('/areas/:areaId', param('areaId').isInt(), ...areaRules(false), handleInputErrors, ah(AreaController.update))
+
+const categoryRules = (required: boolean) => [
+  (required ? body('name') : body('name').optional()).trim().isLength({ min: 3, max: 60 }).withMessage('El nombre debe tener entre 3 y 60 caracteres'),
+  body('color').optional().matches(/^#[0-9a-fA-F]{6}$/).withMessage('Color no válido (usa #RRGGBB)'),
+  body('description').optional({ values: 'null' }).trim().isLength({ max: 200 }),
+  body('areaId').optional({ values: 'null' }).isInt().withMessage('Área no válida').toInt(),
+]
+router.get('/categories', ah(AreaController.listCategories))
+router.post('/categories', ...categoryRules(true), handleInputErrors, ah(AreaController.createCategory))
+router.put('/categories/:categoryId', param('categoryId').isInt(), ...categoryRules(false), handleInputErrors, ah(AreaController.updateCategory))
 
 router.get('/stats', ...rangeRules, handleInputErrors, ah(AdminController.stats))
 router.get('/stats/pdf', ...rangeRules, handleInputErrors, ah(AdminController.statsPdf))
@@ -60,6 +84,9 @@ router.get(
   query('status').optional().isIn([...REPORT_STATUS]),
   query('severity').optional().isIn([...SEVERITY]),
   query('deleted').optional().isIn(['true', 'all']),
+  query('area').optional().custom((v) => v === 'none' || Number.isInteger(Number(v))),
+  query('page').optional().isInt({ min: 1 }),
+  query('limit').optional().isInt({ min: 1, max: 500 }),
   handleInputErrors,
   ah(AdminReportController.list),
 )

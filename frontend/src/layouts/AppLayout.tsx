@@ -2,8 +2,8 @@ import type { ComponentType, SVGProps } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate, useSearchParams } from 'react-router-dom'
 import { Menu, MenuButton, MenuItem, MenuItems } from '@headlessui/react'
 import {
-  ArrowRightEndOnRectangleIcon, ArrowRightStartOnRectangleIcon, CameraIcon, ChartBarIcon, ClockIcon, FunnelIcon, MapIcon,
-  RectangleStackIcon, ShieldCheckIcon, TableCellsIcon, UserPlusIcon,
+  ArrowRightEndOnRectangleIcon, ArrowRightStartOnRectangleIcon, BuildingOffice2Icon, CameraIcon, ChartBarIcon, ClockIcon,
+  FunnelIcon, InboxStackIcon, MapIcon, RectangleStackIcon, ShieldCheckIcon, TableCellsIcon, UserCircleIcon, UserPlusIcon,
 } from '@heroicons/react/24/outline'
 import { useAuth, useLogout } from '@/hooks/useAuth'
 import { ROLE } from '@/lib/labels'
@@ -12,6 +12,7 @@ import InstallPrompt from '@/components/pwa/InstallPrompt'
 import OfflineBanner from '@/components/pwa/OfflineBanner'
 
 type Icon = ComponentType<SVGProps<SVGSVGElement>>
+type NavItem = { to: string; label: string; icon: Icon; show: boolean }
 
 const itemClass = (active: boolean, accent = false) =>
   `group relative flex size-11 shrink-0 items-center justify-center rounded-2xl transition ${
@@ -40,8 +41,30 @@ function RailLink({ to, label, icon: Icon, end, active, accent }: { to: string; 
   )
 }
 
+/** Pestaña de la barra inferior en el celular */
+function TabLink({ to, label, icon: Icon, end }: { to: string; label: string; icon: Icon; end?: boolean }) {
+  return (
+    <NavLink
+      to={to}
+      end={end}
+      className={({ isActive }) =>
+        `flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-2xl py-1.5 text-[11px] font-bold transition ${isActive ? 'text-indigo-700' : 'text-slate-500'}`
+      }
+    >
+      {({ isActive }) => (
+        <>
+          <span className={`flex h-7 w-12 items-center justify-center rounded-full transition ${isActive ? 'bg-indigo-100' : ''}`}>
+            <Icon className="size-6" />
+          </span>
+          <span className="truncate">{label}</span>
+        </>
+      )}
+    </NavLink>
+  )
+}
+
 export default function AppLayout() {
-  const { user, isStaff, isAdmin } = useAuth()
+  const { user, isStaff, isAdmin, canAttend } = useAuth()
   const logout = useLogout()
   const navigate = useNavigate()
   const { pathname } = useLocation()
@@ -58,10 +81,55 @@ export default function AppLayout() {
     return qs ? `/?${qs}` : '/'
   }
 
+  /** Secciones de trabajo según el rol (el backend también valida cada una) */
+  const workItems: NavItem[] = [
+    { to: '/attention', label: 'Bandeja de atención', icon: InboxStackIcon, show: canAttend },
+    { to: '/moderation', label: 'Moderación', icon: ShieldCheckIcon, show: isStaff },
+    { to: '/admin/reports', label: 'Gestionar reportes', icon: TableCellsIcon, show: isAdmin },
+    { to: '/admin/areas', label: 'Áreas y distribución', icon: BuildingOffice2Icon, show: isAdmin },
+    { to: '/admin/stats', label: 'Estadísticas y PDF', icon: ChartBarIcon, show: isAdmin },
+  ]
+
+  const doLogout = () => {
+    logout()
+    navigate('/')
+  }
+
+  const accountMenu = (anchor: 'right end' | 'top end') =>
+    user && (
+      <MenuItems
+        anchor={anchor}
+        transition
+        className="glass-strong z-[1300] w-64 rounded-2xl p-1 transition duration-100 [--anchor-gap:12px] focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
+      >
+        <div className="px-3 py-2">
+          <p className="truncate text-sm font-bold text-slate-900">{user.name}</p>
+          <p className="truncate text-xs text-slate-500">{user.email}</p>
+          <span className="mt-1 inline-block rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-indigo-700">{ROLE[user.role]}</span>
+        </div>
+        {/* En el celular las secciones de trabajo viven aquí */}
+        {anchor === 'top end' &&
+          workItems
+            .filter((i) => i.show && i.to !== '/attention')
+            .map((i) => (
+              <MenuItem key={i.to}>
+                <Link to={i.to} className="flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-semibold text-slate-700 data-[focus]:bg-indigo-50/80">
+                  <i.icon className="size-5" /> {i.label}
+                </Link>
+              </MenuItem>
+            ))}
+        <MenuItem>
+          <button onClick={doLogout} className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-left text-sm font-semibold text-red-600 data-[focus]:bg-red-50/80">
+            <ArrowRightStartOnRectangleIcon className="size-5" /> Cerrar sesión
+          </button>
+        </MenuItem>
+      </MenuItems>
+    )
+
   return (
     <div className="min-h-dvh">
-      {/* Barra lateral de cristal */}
-      <aside className="glass fixed bottom-2 left-2 top-2 z-40 flex w-14 flex-col items-center gap-2 rounded-3xl py-3 max-md:overflow-y-auto md:bottom-3 md:left-3 md:top-3 md:w-16">
+      {/* ---------- Escritorio / tablet: barra lateral de cristal ---------- */}
+      <aside className="glass fixed bottom-3 left-3 top-3 z-40 hidden w-16 flex-col items-center gap-2 overflow-y-auto rounded-3xl py-3 md:flex" aria-label="Navegación principal">
         <Link to="/" aria-label="Inicio" className="mb-1 shrink-0">
           <Logo iconOnly />
         </Link>
@@ -74,9 +142,7 @@ export default function AppLayout() {
 
         <RailLink to="/reports/new" label="Nuevo reporte" icon={CameraIcon} accent />
         {user && <RailLink to="/reports/mine" label="Mis reportes" icon={RectangleStackIcon} />}
-        {isStaff && <RailLink to="/moderation" label="Moderación" icon={ShieldCheckIcon} />}
-        {isAdmin && <RailLink to="/admin/reports" label="Gestionar reportes" icon={TableCellsIcon} />}
-        {isAdmin && <RailLink to="/admin/stats" label="Estadísticas y PDF" icon={ChartBarIcon} />}
+        {workItems.filter((i) => i.show).map((i) => <RailLink key={i.to} to={i.to} label={i.label} icon={i.icon} />)}
 
         <div className="mt-auto flex flex-col items-center gap-2">
           {user ? (
@@ -84,30 +150,7 @@ export default function AppLayout() {
               <MenuButton aria-label="Mi cuenta" className="group relative flex size-11 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 font-bold text-white shadow-lg ring-2 ring-white/70">
                 {user.name.charAt(0).toUpperCase()}
               </MenuButton>
-              <MenuItems
-                anchor="right end"
-                transition
-                className="glass-strong z-[1300] ml-3 w-56 rounded-2xl p-1 transition duration-100 focus:outline-none data-[closed]:scale-95 data-[closed]:opacity-0"
-              >
-                <div className="px-3 py-2">
-                  <p className="truncate text-sm font-bold text-slate-900">{user.name}</p>
-                  <p className="truncate text-xs text-slate-500">{user.email}</p>
-                  <span className="mt-1 inline-block rounded bg-indigo-100 px-1.5 py-0.5 text-[10px] font-bold uppercase text-indigo-700">
-                    {ROLE[user.role]}
-                  </span>
-                </div>
-                <MenuItem>
-                  <button
-                    onClick={() => {
-                      logout()
-                      navigate('/')
-                    }}
-                    className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-red-600 data-[focus]:bg-red-50/80"
-                  >
-                    <ArrowRightStartOnRectangleIcon className="size-4" /> Cerrar sesión
-                  </button>
-                </MenuItem>
-              </MenuItems>
+              {accountMenu('right end')}
             </Menu>
           ) : (
             <>
@@ -118,16 +161,52 @@ export default function AppLayout() {
         </div>
       </aside>
 
+      {/* ---------- Celular: barra inferior con acceso rápido ---------- */}
+      <nav
+        className="glass-strong fixed inset-x-0 bottom-0 z-40 flex items-end gap-1 rounded-t-3xl px-2 pt-1.5 md:hidden"
+        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+        aria-label="Navegación principal"
+      >
+        <TabLink to="/" end label="Mapa" icon={MapIcon} />
+        {user ? <TabLink to="/reports/mine" label="Mis reportes" icon={RectangleStackIcon} /> : <TabLink to="/auth/register" label="Crear cuenta" icon={UserPlusIcon} />}
+        <div className="flex flex-1 justify-center">
+          <NavLink
+            to="/reports/new"
+            aria-label="Nuevo reporte"
+            className="-mt-6 flex size-16 flex-col items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-white shadow-xl shadow-indigo-600/40 ring-4 ring-white active:scale-95"
+          >
+            <CameraIcon className="size-7" />
+            <span className="text-[10px] font-extrabold leading-none">Reportar</span>
+          </NavLink>
+        </div>
+        {canAttend ? <TabLink to="/attention" label="Atención" icon={InboxStackIcon} /> : <TabLink to={panelLink('recientes')} label="Recientes" icon={ClockIcon} />}
+        {user ? (
+          <Menu as="div" className="flex min-w-0 flex-1">
+            <MenuButton className="flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1.5 text-[11px] font-bold text-slate-500 data-[open]:text-indigo-700">
+              <span className="flex h-7 w-12 items-center justify-center">
+                <span className="flex size-7 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 text-xs font-bold text-white">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+              </span>
+              Cuenta
+            </MenuButton>
+            {accountMenu('top end')}
+          </Menu>
+        ) : (
+          <TabLink to="/auth/login" label="Entrar" icon={UserCircleIcon} />
+        )}
+      </nav>
+
       <OfflineBanner />
       <InstallPrompt />
 
       {isHome ? (
-        // El inicio es solo el mapa, a pantalla completa detrás de la barra
-        <main className="fixed inset-0">
+        // El inicio es solo el mapa; en el celular termina donde empieza la barra inferior
+        <main className="fixed inset-x-0 top-0 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-0">
           <Outlet />
         </main>
       ) : (
-        <main className="py-6 pl-[4.75rem] pr-4 md:pl-[6rem] md:pr-6">
+        <main className="px-4 pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] md:py-6 md:pl-[6rem] md:pr-6">
           <div className="mx-auto max-w-6xl">
             <Outlet />
           </div>

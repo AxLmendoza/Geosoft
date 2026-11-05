@@ -4,6 +4,7 @@ import { toast } from 'react-toastify'
 import { CheckBadgeIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
 import { updateOwnerStatus } from '@/api/ReportAPI'
 import Modal from '@/components/ui/Modal'
+import { isClosed } from '@/lib/labels'
 import type { Report } from '@/types'
 
 type Target = 'en_proceso' | 'resuelto'
@@ -11,7 +12,7 @@ type Target = 'en_proceso' | 'resuelto'
 const COPY: Record<Target, { title: string; text: string; button: string }> = {
   en_proceso: {
     title: '¿Ya te dieron seguimiento?',
-    text: 'Marca el reporte "En proceso" si ya vinieron a revisar o están trabajando en ello.',
+    text: 'Marca el reporte "Atención en proceso" si ya vinieron a revisar o están trabajando en ello.',
     button: 'Sí, ya le están dando seguimiento',
   },
   resuelto: {
@@ -39,7 +40,7 @@ export default function OwnerStatusActions({ report }: { report: Report }) {
     },
   })
 
-  if (!report.isOwner || report.status === 'resuelto' || report.status === 'rechazado') return null
+  if (!report.isOwner || isClosed(report.status)) return null
 
   return (
     <div className="rounded-2xl bg-indigo-50 p-4 ring-1 ring-indigo-100">

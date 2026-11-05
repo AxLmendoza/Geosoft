@@ -74,9 +74,9 @@ export async function removeFromBlacklist(id: number) {
 }
 
 /** Solo admin */
-export async function setUserRole({ id, role }: { id: number; role: 'ciudadano' | 'moderador' }) {
+export async function setUserRole({ id, role, areaId }: { id: number; role: 'ciudadano' | 'moderador' | 'operativo'; areaId?: number }) {
   try {
-    return (await api.patch<Msg>(`/admin/users/${id}/role`, { role })).data.message
+    return (await api.patch<Msg>(`/admin/users/${id}/role`, { role, areaId })).data.message
   } catch (e) { rethrow(e) }
 }
 
@@ -92,11 +92,14 @@ export type AdminReportFilters = {
   status?: ReportStatus
   category?: number
   deleted?: 'true' | 'all'
+  page?: number
+  limit?: number
 }
 
-/** Solo admin: CRUD de reportes */
+/** Solo admin: CRUD de reportes (paginado; el total viene en la cabecera X-Total-Count) */
 export async function getAdminReports(params: AdminReportFilters) {
-  return (await api.get<Report[]>('/admin/reports', { params })).data
+  const res = await api.get<Report[]>('/admin/reports', { params })
+  return { data: res.data, total: Number(res.headers['x-total-count'] ?? res.data.length) }
 }
 
 export type AdminReportInput = {

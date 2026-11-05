@@ -8,6 +8,7 @@ import { Blacklist } from '../models/Blacklist'
 import { serializeReport } from '../utils/serializers'
 import { buildReportFilters, reportIncludes, serializeMany } from './ReportController'
 import { changeStatus } from '../utils/reportStatus'
+import { CLOSED_STATUSES } from '../models/constants'
 
 /** Un moderador solo puede sancionar ciudadanos; el admin a cualquiera menos a otro admin */
 function canSanction(actor: User, target: User) {
@@ -83,7 +84,7 @@ export class ModerationController {
     let list = await serializeMany(reports, req.user)
     if (req.query.community === 'solucionado') {
       list = list
-        .filter((r) => r.votes.solucionado > 0 && r.votes.solucionado > r.votes.sin_solucion && !['resuelto', 'rechazado'].includes(r.status))
+        .filter((r) => r.votes.solucionado > 0 && r.votes.solucionado > r.votes.sin_solucion && !CLOSED_STATUSES.includes(r.status))
         .sort((a, b) => b.votes.solucionado - a.votes.solucionado)
     }
     res.json(list)
