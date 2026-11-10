@@ -1,20 +1,25 @@
 import type { CSSProperties, ReactNode } from 'react'
 import { ArrowPathIcon, ExclamationTriangleIcon, InboxIcon } from '@heroicons/react/24/outline'
+import { FadeIn } from './Motion'
 
 /** Bloque gris animado que ocupa el lugar del contenido mientras carga */
 export function Skeleton({ className = '', style }: { className?: string; style?: CSSProperties }) {
-  return <div aria-hidden style={style} className={`animate-pulse rounded-xl bg-slate-900/[0.07] ${className}`} />
+  return <div aria-hidden style={style} className={`animate-pulse rounded-xl bg-slate-900/[0.06] ${className}`} />
 }
 
 /** Tarjeta de reporte "fantasma" con la misma forma que ReportCard */
 export function ReportCardSkeleton() {
   return (
     <div className="overflow-hidden rounded-2xl glass" aria-hidden>
-      <Skeleton className="aspect-[4/3] w-full rounded-none" />
-      <div className="space-y-2 p-4">
+      <Skeleton className="aspect-[16/10] w-full rounded-none" />
+      <div className="space-y-2.5 p-4">
         <Skeleton className="h-4 w-3/4" />
         <Skeleton className="h-3 w-full" />
         <Skeleton className="h-3 w-1/2" />
+        <div className="flex gap-2 pt-1">
+          <Skeleton className="h-5 w-20 rounded-full" />
+          <Skeleton className="h-5 w-14 rounded-full" />
+        </div>
       </div>
     </div>
   )
@@ -23,10 +28,10 @@ export function ReportCardSkeleton() {
 /** Filas fantasma para listas y tablas */
 export function ListSkeleton({ rows = 5 }: { rows?: number }) {
   return (
-    <div className="divide-y divide-white/50 overflow-hidden rounded-2xl glass" role="status" aria-label="Cargando">
+    <div className="divide-y divide-line overflow-hidden rounded-2xl glass" role="status" aria-label="Cargando">
       {Array.from({ length: rows }).map((_, i) => (
         <div key={i} className="flex items-center gap-3 p-4">
-          <Skeleton className="size-14 shrink-0" />
+          <Skeleton className="size-12 shrink-0" />
           <div className="flex-1 space-y-2">
             <Skeleton className="h-4 w-2/3" />
             <Skeleton className="h-3 w-1/3" />
@@ -40,28 +45,32 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
 /** Mensaje cuando no hay datos */
 export function EmptyState({ title, text, action, icon }: { title: string; text?: string; action?: ReactNode; icon?: ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl glass px-6 py-12 text-center">
-      <span className="flex size-12 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-500">{icon ?? <InboxIcon className="size-6" />}</span>
-      <p className="font-bold text-slate-800">{title}</p>
-      {text && <p className="max-w-sm text-sm text-slate-500">{text}</p>}
-      {action && <div className="mt-2">{action}</div>}
-    </div>
+    <FadeIn className="relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-14 text-center">
+      <span className="relative mb-2 flex size-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-8 ring-brand-50/50">
+        {icon ?? <InboxIcon className="size-7" aria-hidden />}
+      </span>
+      <p className="font-display text-lg font-semibold text-slate-900">{title}</p>
+      {text && <p className="max-w-sm text-[15px] text-slate-500">{text}</p>}
+      {action && <div className="mt-3">{action}</div>}
+    </FadeIn>
   )
 }
 
 /** Error de carga con botón para reintentar */
 export function ErrorState({ message = 'No pudimos cargar la información.', onRetry }: { message?: string; onRetry?: () => void }) {
   return (
-    <div role="alert" className="flex flex-col items-center gap-2 rounded-2xl bg-red-50/80 px-6 py-10 text-center ring-1 ring-red-200">
-      <ExclamationTriangleIcon className="size-8 text-red-500" />
-      <p className="font-bold text-red-800">{message}</p>
-      <p className="text-sm text-red-700/80">Revisa tu conexión e inténtalo de nuevo.</p>
+    <FadeIn role="alert" className="flex flex-col items-center gap-2 rounded-2xl bg-red-50 px-6 py-10 text-center ring-1 ring-inset ring-red-200">
+      <span className="mb-1 flex size-12 items-center justify-center rounded-2xl bg-white text-red-600 shadow-xs ring-1 ring-red-200">
+        <ExclamationTriangleIcon className="size-6" aria-hidden />
+      </span>
+      <p className="font-display font-semibold text-red-900">{message}</p>
+      <p className="text-sm text-red-800/80">Revisa tu conexión e inténtalo de nuevo.</p>
       {onRetry && (
-        <button onClick={onRetry} className="mt-2 inline-flex items-center gap-1.5 rounded-xl bg-white px-4 py-2 text-sm font-bold text-red-700 ring-1 ring-red-200 hover:bg-red-50">
-          <ArrowPathIcon className="size-4" /> Reintentar
+        <button onClick={onRetry} className="btn-danger btn-compact mt-2">
+          <ArrowPathIcon className="size-4" aria-hidden /> Reintentar
         </button>
       )}
-    </div>
+    </FadeIn>
   )
 }
 
@@ -69,8 +78,8 @@ export function ErrorState({ message = 'No pudimos cargar la información.', onR
 export function RefreshingBadge({ show }: { show: boolean }) {
   if (!show) return null
   return (
-    <span role="status" className="inline-flex items-center gap-1.5 rounded-full bg-white/70 px-2.5 py-1 text-xs font-bold text-indigo-700 ring-1 ring-indigo-100">
-      <ArrowPathIcon className="size-3.5 animate-spin" /> Actualizando…
+    <span role="status" className="inline-flex items-center gap-1.5 rounded-full bg-brand-50 px-2.5 py-1 font-sans text-xs font-semibold tracking-normal text-brand-700 ring-1 ring-inset ring-brand-100">
+      <ArrowPathIcon className="size-3.5 animate-spin" aria-hidden /> Actualizando…
     </span>
   )
 }

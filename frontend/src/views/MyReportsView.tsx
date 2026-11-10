@@ -6,6 +6,7 @@ import { getMyReports } from '@/api/ReportAPI'
 import { isClosed } from '@/lib/labels'
 import ReportCard from '@/components/reports/ReportCard'
 import { EmptyState, ErrorState, RefreshingBadge, ReportCardSkeleton } from '@/components/ui/States'
+import { m, SPRING, Stagger, StaggerItem } from '@/components/ui/Motion'
 
 type Tab = 'abiertos' | 'cerrados' | 'todos'
 
@@ -36,26 +37,27 @@ export default function MyReportsView() {
           <h1 className="page-title flex items-center gap-2">
             Mis reportes <RefreshingBadge show={isFetching && !isLoading} />
           </h1>
-          <p className="text-slate-500">Consulta en qué va cada uno de tus reportes.</p>
+          <p className="page-subtitle">Consulta en qué va cada uno de tus reportes.</p>
         </div>
         <Link to="/reports/new" className="btn-primary max-sm:hidden">
           <CameraIcon className="size-5" /> Nuevo reporte
         </Link>
       </header>
 
-      <div role="tablist" className="flex gap-1 overflow-x-auto rounded-xl bg-slate-900/5 p-1">
+      <div role="tablist" aria-label="Filtrar mis reportes" className="flex w-full gap-1 overflow-x-auto rounded-2xl border border-line bg-white p-1 shadow-xs sm:w-fit">
         {tabs.map((t) => (
           <button
             key={t.id}
             role="tab"
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
-            className={`flex flex-1 items-center justify-center gap-1.5 whitespace-nowrap rounded-lg px-3 py-2 text-sm font-bold transition sm:flex-none ${
-              tab === t.id ? 'bg-white text-indigo-700 shadow' : 'text-slate-600 hover:text-slate-900'
+            className={`relative flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors sm:flex-none ${
+              tab === t.id ? 'text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
-            {t.label}
-            <span className={`rounded-full px-1.5 text-xs ${tab === t.id ? 'bg-indigo-100' : 'bg-slate-900/10'}`}>{isLoading ? '·' : counts[t.id]}</span>
+            {tab === t.id && <m.span layoutId="mine-tab" transition={SPRING} className="absolute inset-0 rounded-xl bg-brand-600 shadow-brand" aria-hidden />}
+            <span className="relative">{t.label}</span>
+            <span className={`relative min-w-5 rounded-full px-1.5 text-xs tabular-nums ${tab === t.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>{isLoading ? '·' : counts[t.id]}</span>
           </button>
         ))}
       </div>
@@ -76,9 +78,13 @@ export default function MyReportsView() {
       ) : list.length === 0 ? (
         <EmptyState title={tab === 'abiertos' ? 'No tienes reportes en curso' : 'No tienes reportes finalizados'} />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-          {list.map((r) => <ReportCard key={r.id} report={r} showProgress />)}
-        </div>
+        <Stagger key={tab} className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {list.map((r) => (
+            <StaggerItem key={r.id}>
+              <ReportCard report={r} showProgress />
+            </StaggerItem>
+          ))}
+        </Stagger>
       )}
     </div>
   )

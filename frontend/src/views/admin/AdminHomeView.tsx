@@ -7,6 +7,8 @@ import { timeAgo } from '@/lib/date'
 import { StatusBadge } from '@/components/ui/Badges'
 import { ErrorState, ListSkeleton, Skeleton } from '@/components/ui/States'
 import type { ReportStatus } from '@/types'
+import { ArrowRightIcon, CheckBadgeIcon, ClockIcon, ExclamationTriangleIcon, WrenchScrewdriverIcon } from '@heroicons/react/24/outline'
+import { Stagger, StaggerItem } from '@/components/ui/Motion'
 
 type Attention = { id: number; title: string; status: ReportStatus; createdAt: string; area: string | null; reasons: string[] }
 
@@ -43,49 +45,62 @@ export default function AdminHomeView() {
   const listError = critical.isError || unassigned.isError || stale.isError
 
   const kpis = [
-    { label: 'Por atender', value: count('pendiente', 'en_revision'), hint: 'Recibidos o en validación', to: '/attention' },
-    { label: 'En atención', value: count('asignado', 'en_proceso'), hint: 'Asignados o en proceso', to: '/attention' },
-    { label: 'Resueltos', value: count('resuelto', 'cerrado'), hint: 'Total histórico', to: '/admin/stats' },
-    { label: 'Requieren atención', value: listLoading ? null : attention.length, hint: 'Ver la lista de abajo', to: '#requieren', alert: true },
+    { label: 'Por atender', value: count('pendiente', 'en_revision'), hint: 'Recibidos o en validación', to: '/attention', icon: ClockIcon, tone: 'bg-amber-50 text-amber-700 ring-amber-200' },
+    { label: 'En atención', value: count('asignado', 'en_proceso'), hint: 'Asignados o en proceso', to: '/attention', icon: WrenchScrewdriverIcon, tone: 'bg-brand-50 text-brand-700 ring-brand-200' },
+    { label: 'Resueltos', value: count('resuelto', 'cerrado'), hint: 'Total histórico', to: '/admin/stats', icon: CheckBadgeIcon, tone: 'bg-emerald-50 text-emerald-700 ring-emerald-200' },
+    { label: 'Requieren atención', value: listLoading ? null : attention.length, hint: 'Ver la lista de abajo', to: '#requieren', alert: true, icon: ExclamationTriangleIcon, tone: 'bg-red-50 text-red-700 ring-red-200' },
   ]
 
   return (
     <div className="space-y-8">
       <header>
-        <h1 className="page-title">Resumen</h1>
+        <p className="eyebrow">Panel de administración</p>
+        <h1 className="page-title mt-1">Resumen</h1>
         <p className="page-subtitle">Hola, {user?.name?.split(' ')[0]}. Esto es lo que necesita tu atención hoy.</p>
       </header>
 
       {summary.isError ? (
         <ErrorState message="No pudimos cargar el resumen." onRetry={() => summary.refetch()} />
       ) : (
-        <section className="grid grid-cols-2 overflow-hidden rounded-xl border border-slate-200 bg-white lg:grid-cols-4" aria-label="Indicadores">
-          {kpis.map((k, i) => {
-            const className = `block p-5 transition hover:bg-slate-50 ${i % 2 ? 'border-l border-slate-200' : ''} ${i >= 2 ? 'border-t border-slate-200 lg:border-t-0' : ''} ${i > 0 ? 'lg:border-l' : ''}`
-            const body = (
-              <>
-                <p className="text-sm text-slate-500">{k.label}</p>
-                {summary.isLoading || k.value === null ? (
-                  <Skeleton className="mt-2 h-8 w-14" />
-                ) : (
-                  <p className={`mt-1 text-3xl font-bold tabular-nums ${k.alert && k.value ? 'text-red-700' : 'text-slate-900'}`}>{k.value}</p>
-                )}
-                <p className="mt-1 text-xs text-slate-500">{k.hint}</p>
-              </>
-            )
-            return k.to.startsWith('#') ? (
-              <a key={k.label} href={k.to} className={className}>{body}</a>
-            ) : (
-              <Link key={k.label} to={k.to} className={className}>{body}</Link>
-            )
-          })}
+        <section aria-label="Indicadores">
+          <Stagger className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {kpis.map((k) => {
+              const className = 'glass group flex h-full flex-col rounded-2xl p-4 transition duration-200 hover:-translate-y-0.5 hover:border-brand-200 hover:shadow-lift sm:p-5'
+              const body = (
+                <>
+                  <div className="flex items-start justify-between gap-2">
+                    <span className={`flex size-10 items-center justify-center rounded-xl ring-1 ring-inset ${k.tone}`}>
+                      <k.icon className="size-5" aria-hidden />
+                    </span>
+                    <ArrowRightIcon className="size-4 text-slate-300 transition group-hover:translate-x-0.5 group-hover:text-brand-600" aria-hidden />
+                  </div>
+                  <p className="mt-4 text-sm font-medium text-slate-600">{k.label}</p>
+                  {summary.isLoading || k.value === null ? (
+                    <Skeleton className="mt-1.5 h-9 w-16" />
+                  ) : (
+                    <p className={`mt-0.5 font-display text-3xl font-semibold tracking-tight tabular-nums ${k.alert && k.value ? 'text-red-700' : 'text-slate-900'}`}>{k.value}</p>
+                  )}
+                  <p className="mt-1 text-xs text-slate-500">{k.hint}</p>
+                </>
+              )
+              return (
+                <StaggerItem key={k.label}>
+                  {k.to.startsWith('#') ? (
+                    <a href={k.to} className={className}>{body}</a>
+                  ) : (
+                    <Link to={k.to} className={className}>{body}</Link>
+                  )}
+                </StaggerItem>
+              )
+            })}
+          </Stagger>
         </section>
       )}
 
       <section id="requieren" className="space-y-3" aria-labelledby="req-title">
         <div className="flex flex-wrap items-end justify-between gap-2">
           <div>
-            <h2 id="req-title" className="text-lg font-bold text-slate-900">Requieren atención</h2>
+            <h2 id="req-title" className="font-display text-lg font-semibold text-slate-900">Requieren atención</h2>
             <p className="text-sm text-slate-500">Reportes críticos, sin área asignada o sin movimiento reciente.</p>
           </div>
           <Link to="/attention" className="btn-secondary btn-compact">Abrir bandeja de atención</Link>
@@ -96,19 +111,19 @@ export default function AdminHomeView() {
         ) : listError ? (
           <ErrorState onRetry={() => { critical.refetch(); unassigned.refetch(); stale.refetch() }} />
         ) : attention.length === 0 ? (
-          <p className="rounded-xl border border-slate-200 bg-white p-8 text-center text-sm text-slate-500">Todo en orden: no hay reportes que requieran atención especial.</p>
+          <p className="glass rounded-2xl p-8 text-center text-sm text-slate-500">Todo en orden: no hay reportes que requieran atención especial.</p>
         ) : (
-          <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <ul className="glass divide-y divide-line overflow-hidden rounded-2xl">
             {attention.slice(0, 10).map((r) => (
               <li key={r.id}>
-                <Link to={`/reports/${r.id}`} className="flex flex-col gap-1.5 p-4 hover:bg-slate-50 sm:flex-row sm:items-center sm:gap-4">
+                <Link to={`/reports/${r.id}`} className="flex flex-col gap-1.5 p-4 transition-colors hover:bg-brand-50/40 sm:flex-row sm:items-center sm:gap-4">
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-semibold text-slate-900"><span className="font-normal text-slate-400">#{r.id}</span> {r.title}</p>
                     <p className="text-xs text-slate-500">{r.area ? `${r.area} · ` : ''}recibido {timeAgo(r.createdAt)}</p>
                   </div>
                   <div className="flex flex-wrap items-center gap-1.5">
                     {r.reasons.map((reason) => (
-                      <span key={reason} className={`rounded px-2 py-0.5 text-xs font-medium ${reason === 'Gravedad crítica' ? 'bg-red-50 text-red-700' : 'bg-slate-100 text-slate-700'}`}>{reason}</span>
+                      <span key={reason} className={`rounded-md px-2 py-0.5 text-xs font-medium ring-1 ring-inset ${reason === 'Gravedad crítica' ? 'bg-red-50 text-red-700 ring-red-200' : 'bg-slate-50 text-slate-700 ring-slate-200'}`}>{reason}</span>
                     ))}
                     <StatusBadge status={r.status} short />
                   </div>

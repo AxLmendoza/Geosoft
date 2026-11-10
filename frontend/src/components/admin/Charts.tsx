@@ -3,7 +3,7 @@ import { STATUS, SEVERITY } from '@/lib/labels'
 import type { AdminStats } from '@/types'
 
 /* Paleta validada para daltonismo (ΔE ≥ 22): reportados / resueltos; gris neutro para rechazados */
-export const SERIES = { reportados: '#4f46e5', resueltos: '#0d9488', rechazados: '#94a3b8' }
+export const SERIES = { reportados: '#2556eb', resueltos: '#0d9488', rechazados: '#94a3b8' }
 const AXIS = { fontSize: 12, fill: '#64748b' }
 const GRID = '#e2e8f0'
 const MONTHS = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']

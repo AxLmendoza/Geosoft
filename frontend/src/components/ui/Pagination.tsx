@@ -3,7 +3,7 @@ export default function Pagination({ page, pages, total, onChange, noun = 'repor
   if (pages <= 1) return null
   return (
     <nav className="flex flex-wrap items-center justify-between gap-3 text-sm" aria-label="Paginación">
-      <p className="text-slate-500">{total} {noun} · página {page} de {pages}</p>
+      <p className="text-slate-500"><span className="font-semibold text-slate-700 tabular-nums">{total}</span> {noun} · página <span className="tabular-nums">{page}</span> de <span className="tabular-nums">{pages}</span></p>
       <div className="flex gap-2">
         <button disabled={page <= 1} onClick={() => onChange(page - 1)} className="btn-secondary btn-compact">Anterior</button>
         <button disabled={page >= pages} onClick={() => onChange(page + 1)} className="btn-secondary btn-compact">Siguiente</button>

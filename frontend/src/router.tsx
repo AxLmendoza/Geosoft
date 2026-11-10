@@ -45,7 +45,7 @@ export default function Router() {
     <BrowserRouter>
       <Routes>
         <Route element={<AppLayout />}>
-          <Route index element={<Suspense fallback={<div className="h-full w-full animate-pulse bg-indigo-100/50" />}><MapView /></Suspense>} />
+          <Route index element={<Suspense fallback={<div className="h-full w-full animate-pulse bg-brand-100/50" />}><MapView /></Suspense>} />
           <Route path="/reports/:reportId" element={page(<ReportDetailView />)} />
 
           <Route element={<ProtectedRoute />}>

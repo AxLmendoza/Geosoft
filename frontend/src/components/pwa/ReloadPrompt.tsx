@@ -28,7 +28,7 @@ export default function ReloadPrompt() {
   return (
     <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6 z-[1400] mx-auto max-w-sm rounded-2xl border border-white/10 bg-slate-900/75 p-4 text-white shadow-2xl backdrop-blur-xl" role="alert">
       <div className="flex items-start gap-3">
-        {needRefresh ? <ArrowPathIcon className="size-6 shrink-0 text-indigo-300" /> : <CheckCircleIcon className="size-6 shrink-0 text-emerald-400" />}
+        {needRefresh ? <ArrowPathIcon className="size-6 shrink-0 text-brand-300" /> : <CheckCircleIcon className="size-6 shrink-0 text-emerald-400" />}
         <p className="flex-1 text-sm">
           {needRefresh ? 'Hay una nueva versión de GeoScript disponible.' : 'GeoScript está lista para usarse sin conexión.'}
         </p>
@@ -37,7 +37,7 @@ export default function ReloadPrompt() {
         </button>
       </div>
       {needRefresh && (
-        <button onClick={() => updateServiceWorker(true)} className="mt-3 w-full rounded-xl bg-indigo-500 py-2 text-sm font-bold hover:bg-indigo-400">
+        <button onClick={() => updateServiceWorker(true)} className="mt-3 w-full rounded-xl bg-brand-500 py-2 text-sm font-bold hover:bg-brand-400">
           Actualizar ahora
         </button>
       )}

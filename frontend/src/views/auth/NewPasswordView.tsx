@@ -49,7 +49,7 @@ export default function NewPasswordView() {
 
   return (
     <>
-      <h1 className="text-2xl font-extrabold text-slate-900">Nuevo password</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Nuevo password</h1>
       {!isValid ? (
         <>
           <p className="mt-1 text-sm text-slate-500">Ingresa el código que recibiste {known ? <>en <b>{known}</b></> : 'por correo'}.</p>
@@ -64,7 +64,7 @@ export default function NewPasswordView() {
           </div>
           <p className="mt-3 text-center text-xs text-slate-500">¿No llega? Revisa también la carpeta de spam.</p>
           <nav className="mt-6 text-center text-sm">
-            <Link to="/auth/forgot-password" className="font-bold text-indigo-600">Solicitar un nuevo código</Link>
+            <Link to="/auth/forgot-password" className="font-bold text-brand-600">Solicitar un nuevo código</Link>
           </nav>
         </>
       ) : (

@@ -55,7 +55,7 @@ export default function FlagsPanel() {
             {f.comment && <p className="text-sm italic text-slate-600">“{f.comment}”</p>}
             {f.report ? (
               <>
-                <Link to={`/reports/${f.report.id}`} className="block truncate font-bold text-slate-900 hover:text-indigo-700">
+                <Link to={`/reports/${f.report.id}`} className="block truncate font-bold text-slate-900 hover:text-brand-700">
                   {f.report.title}
                 </Link>
                 <p className="text-xs text-slate-500">

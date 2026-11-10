@@ -131,7 +131,7 @@ export default function AdminReportsView() {
       ) : (
         <div className={`transition-opacity ${isPlaceholderData ? 'opacity-60' : ''}`}>
           {/* Celular: lista (sin desplazamiento horizontal) */}
-          <ul className="divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white md:hidden">
+          <ul className="divide-y divide-line overflow-hidden glass rounded-2xl md:hidden">
             {reports.map((r) => (
               <li key={r.id} className={`space-y-2 p-4 ${r.deletedAt ? 'opacity-60' : ''}`}>
                 <Link to={`/reports/${r.id}`} className="block font-semibold text-slate-900 hover:underline"><span className="font-normal text-slate-400">#{r.id}</span> {r.title}</Link>
@@ -143,9 +143,9 @@ export default function AdminReportsView() {
           </ul>
 
           {/* Escritorio: tabla */}
-          <div className="hidden overflow-x-auto rounded-xl border border-slate-200 bg-white md:block">
+          <div className="hidden overflow-x-auto glass rounded-2xl md:block">
             <table className="w-full text-left text-sm">
-              <thead className="border-b border-slate-200 bg-slate-50 text-xs font-semibold text-slate-500">
+              <thead className="border-b border-line bg-slate-50 text-xs font-semibold text-slate-500">
                 <tr>
                   <th className="px-4 py-3">Reporte</th>
                   <th className="px-4 py-3">Estado</th>
@@ -159,7 +159,7 @@ export default function AdminReportsView() {
                 {reports.map((r) => (
                   <tr key={r.id} className={r.deletedAt ? 'opacity-60' : ''}>
                     <td className="px-4 py-3">
-                      <Link to={`/reports/${r.id}`} className="block max-w-72 truncate font-semibold text-slate-900 hover:text-indigo-700 hover:underline"><span className="font-normal text-slate-400">#{r.id}</span> {r.title}</Link>
+                      <Link to={`/reports/${r.id}`} className="block max-w-72 truncate font-semibold text-slate-900 hover:text-brand-700 hover:underline"><span className="font-normal text-slate-400">#{r.id}</span> {r.title}</Link>
                       <p className="text-xs text-slate-500">{r.category.name}{r.colonia ? ` · ${r.colonia}` : ''}</p>
                     </td>
                     <td className="px-4 py-3"><div className="flex flex-wrap gap-1"><StatusBadge status={r.status} short />{flags(r)}</div></td>

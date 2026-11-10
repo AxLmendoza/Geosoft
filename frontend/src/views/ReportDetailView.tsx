@@ -142,7 +142,7 @@ export default function ReportDetailView() {
 
         {/* Columna lateral: foto, datos y ubicación */}
         <aside className="min-w-0 space-y-6">
-          <div className="overflow-hidden rounded-xl border border-slate-200 bg-slate-900">
+          <div className="overflow-hidden rounded-xl border border-line bg-slate-900">
             <ImageViewer src={assetUrl(report.imageUrl)} alt={report.title} className="w-full" thumbClassName="max-h-80 w-full object-contain" />
           </div>
 
@@ -167,7 +167,7 @@ export default function ReportDetailView() {
             <section className="card"><CommunityVotes report={report} /></section>
           )}
 
-          <section className="relative h-56 overflow-hidden rounded-xl border border-slate-200" aria-label="Ubicación en el mapa">
+          <section className="relative h-56 overflow-hidden rounded-xl border border-line" aria-label="Ubicación en el mapa">
             <BaseMap center={report} zoom={16} showOverlay={false}>
               <Marker longitude={report.lng} latitude={report.lat} anchor="bottom">
                 <ReportPin report={report} />

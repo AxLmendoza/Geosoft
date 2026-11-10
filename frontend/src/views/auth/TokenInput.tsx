@@ -15,7 +15,7 @@ export default function TokenInput({ value, onChange, onComplete, disabled }: Pr
         {Array.from({ length: 6 }).map((_, i) => (
           <PinInputField
             key={i}
-            className="size-11 rounded-xl border border-slate-300 bg-slate-50 text-center text-xl font-bold text-slate-900 outline-none transition focus:border-indigo-500 focus:bg-white focus:ring-4 focus:ring-indigo-100 sm:size-12"
+            className="size-11 rounded-xl border border-slate-300 bg-slate-50 text-center font-display text-xl font-semibold text-slate-900 outline-none transition focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-100 sm:size-12"
           />
         ))}
       </PinInput>

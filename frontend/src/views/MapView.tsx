@@ -1,7 +1,7 @@
 import { useMemo, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { FunnelIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { FunnelIcon, ListBulletIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { getReports } from '@/api/ReportAPI'
 import { useCategories } from '@/hooks/useCategories'
 import { STATUS_OPTIONS } from '@/lib/labels'
@@ -11,19 +11,25 @@ import { ReportCardSkeleton } from '@/components/ui/States'
 import SelectBox from '@/components/ui/SelectBox'
 import { PIN_LEGEND, PinStatusIcon } from '@/components/map/pinIcons'
 import type { ReportFilters, ReportStatus } from '@/types'
+import { m, Stagger, StaggerItem } from '@/components/ui/Motion'
 
 /** Panel flotante sobre el mapa (filtros / recientes) */
 function MapPanel({ title, onClose, children }: { title: string; onClose: () => void; children: ReactNode }) {
   return (
-    <aside className="glass-strong absolute inset-x-2 bottom-2 top-2 z-30 flex flex-col rounded-xl md:inset-x-auto md:bottom-3 md:left-3 md:top-3 md:w-96">
-      <header className="flex items-center justify-between gap-2 border-b border-slate-200 px-4 py-3">
-        <h2 className="text-base font-bold text-slate-900">{title}</h2>
+    <m.aside
+      initial={{ opacity: 0, x: -16, scale: 0.98 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+      className="glass-strong absolute inset-x-2 bottom-2 top-2 z-30 flex flex-col overflow-hidden rounded-2xl bg-white/95 backdrop-blur-xl md:inset-x-auto md:bottom-4 md:left-4 md:top-4 md:w-[24rem]"
+    >
+      <header className="flex items-center justify-between gap-2 border-b border-line px-5 py-3.5">
+        <h2 className="font-display text-base font-semibold text-slate-900">{title}</h2>
         <button onClick={onClose} className="btn-secondary btn-compact">
           <XMarkIcon className="size-4" aria-hidden /> Cerrar
         </button>
       </header>
-      <div className="flex-1 overflow-y-auto p-4">{children}</div>
-    </aside>
+      <div className="flex-1 overflow-y-auto p-5">{children}</div>
+    </m.aside>
   )
 }
 
@@ -66,15 +72,26 @@ export default function MapView() {
 
       {/* Acciones del mapa, con texto para que se entienda qué hace cada una */}
       {!panel && (
-        <div className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2">
+        <m.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2 md:left-4"
+          style={{ top: 'max(0.75rem, env(safe-area-inset-top))' }}
+        >
           <button onClick={() => setParam('panel', 'filtros')} className="glass-btn !px-3 !py-2 !text-sm">
             <FunnelIcon className="size-4" aria-hidden /> Filtros{activeFilters ? ` (${activeFilters})` : ''}
           </button>
           <button onClick={() => setParam('panel', 'recientes')} className="glass-btn !px-3 !py-2 !text-sm">
-            Ver lista
+            <ListBulletIcon className="size-4" aria-hidden /> Ver lista
           </button>
-          <span className="glass-btn !text-xs" aria-live="polite">{count}</span>
-        </div>
+          <span className="glass-btn pointer-events-none !text-xs" aria-live="polite">
+            <span className="relative flex size-2" aria-hidden>
+              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
+              <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
+            </span>
+            {count}
+          </span>
+        </m.div>
       )}
 
       {panel === 'filtros' && (
@@ -98,8 +115,8 @@ export default function MapView() {
             {isError && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">No se pudieron cargar los reportes. Se reintentará automáticamente.</p>}
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">Significado de los pines</p>
-              <ul className="space-y-1.5">
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Significado de los pines</p>
+              <ul className="space-y-1 rounded-xl bg-slate-50 p-3 ring-1 ring-inset ring-line">
                 {PIN_LEGEND.map((p) => (
                   <li key={p.kind} className="flex items-center gap-2 text-sm text-slate-700">
                     <PinStatusIcon kind={p.kind} className="size-4" /> {p.label}
@@ -120,11 +137,13 @@ export default function MapView() {
           ) : reports.length === 0 ? (
             <p className="text-center text-slate-500">No hay reportes con estos filtros.</p>
           ) : (
-            <div className="grid gap-4">
+            <Stagger className="grid gap-4">
               {reports.slice(0, 9).map((r) => (
-                <ReportCard key={r.id} report={r} />
+                <StaggerItem key={r.id}>
+                  <ReportCard report={r} />
+                </StaggerItem>
               ))}
-            </div>
+            </Stagger>
           )}
         </MapPanel>
       )}

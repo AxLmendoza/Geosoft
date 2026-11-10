@@ -19,7 +19,7 @@ export default function ForgotPasswordView() {
 
   return (
     <>
-      <h1 className="text-2xl font-extrabold text-slate-900">Restablecer password</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Restablecer password</h1>
       <p className="mt-1 text-sm text-slate-500">Te enviaremos un código a tu correo.</p>
       <form onSubmit={handleSubmit(({ email }) => mutate(email))} className="mt-6 space-y-4" noValidate>
         <div>
@@ -31,7 +31,7 @@ export default function ForgotPasswordView() {
         <button disabled={isPending} className="btn-primary w-full">{isPending ? 'Enviando…' : 'Enviar código'}</button>
       </form>
       <nav className="mt-6 text-center text-sm">
-        <Link to="/auth/login" className="font-bold text-indigo-600">Volver a iniciar sesión</Link>
+        <Link to="/auth/login" className="font-bold text-brand-600">Volver a iniciar sesión</Link>
       </nav>
     </>
   )

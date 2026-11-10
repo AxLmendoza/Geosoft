@@ -32,7 +32,7 @@ export default function LoginView() {
 
   return (
     <>
-      <h1 className="text-2xl font-extrabold text-slate-900">Iniciar sesión</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Iniciar sesión</h1>
       <p className="mt-1 text-sm text-slate-500">Reporta fallas de tu colonia y dales seguimiento.</p>
 
       <form onSubmit={handleSubmit((data) => mutate(data))} className="mt-6 space-y-4" noValidate>
@@ -54,8 +54,8 @@ export default function LoginView() {
       </form>
 
       <nav className="mt-6 flex flex-col gap-2 text-center text-sm">
-        <Link to="/auth/register" className="text-slate-600">¿No tienes cuenta? <b className="text-indigo-600">Crea una</b></Link>
-        <Link to="/auth/forgot-password" className="text-slate-600">¿Olvidaste tu password? <b className="text-indigo-600">Restablecer</b></Link>
+        <Link to="/auth/register" className="text-slate-600">¿No tienes cuenta? <b className="text-brand-600">Crea una</b></Link>
+        <Link to="/auth/forgot-password" className="text-slate-600">¿Olvidaste tu password? <b className="text-brand-600">Restablecer</b></Link>
       </nav>
     </>
   )

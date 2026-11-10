@@ -52,7 +52,7 @@ const fmtHours = (h: number | null) => (h === null ? '—' : h < 48 ? `${h.toFix
 function Panel({ title, subtitle, children }: { title: string; subtitle?: string; children: ReactNode }) {
   return (
     <section className="card">
-      <h2 className="text-lg font-extrabold text-slate-900">{title}</h2>
+      <h2 className="font-display text-lg font-semibold text-slate-900">{title}</h2>
       {subtitle && <p className="mb-3 text-sm text-slate-500">{subtitle}</p>}
       {children}
     </section>
@@ -99,7 +99,7 @@ export default function AdminStatsView() {
               <button
                 key={p.label}
                 onClick={() => setRange(r)}
-                className={`rounded-lg px-3 py-1.5 text-sm font-bold ${active ? 'bg-white text-indigo-700 shadow' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`rounded-lg px-3 py-1.5 text-sm font-bold ${active ? 'bg-white text-brand-700 shadow' : 'text-slate-600 hover:text-slate-900'}`}
               >
                 {p.label}
               </button>
@@ -157,7 +157,7 @@ export default function AdminStatsView() {
           <Panel title="Carga por área responsable" subtitle="Reportes abiertos, resueltos y tiempo promedio de solución de cada área o dependencia">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="text-xs uppercase text-slate-500">
+                <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-slate-500">
                   <tr>
                     <th className="py-2">Área</th>
                     <th className="py-2 text-right">Total</th>
@@ -188,7 +188,7 @@ export default function AdminStatsView() {
             {stats.priorityZones.length ? (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[480px] text-left text-sm">
-                  <thead className="text-xs uppercase text-slate-500">
+                  <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-slate-500">
                     <tr>
                       <th className="py-2">#</th>
                       <th className="py-2">Colonia</th>

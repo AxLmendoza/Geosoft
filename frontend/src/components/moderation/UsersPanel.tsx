@@ -113,7 +113,7 @@ export default function UsersPanel() {
 
       <div className="overflow-x-auto rounded-2xl glass">
         <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="bg-white/40 text-xs uppercase text-slate-500">
+          <thead className="border-b border-line bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
             <tr>
               <th className="px-4 py-3">Usuario</th>
               <th className="px-4 py-3">Rol</th>
@@ -132,7 +132,7 @@ export default function UsersPanel() {
                   {u.banned && <p className="text-xs font-semibold text-red-600">Suspendido: {u.bannedReason}</p>}
                 </td>
                 <td className="px-4 py-3">
-                  <span className="rounded bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-700">{ROLE[u.role]}</span>
+                  <span className="rounded bg-brand-50 px-2 py-0.5 text-xs font-bold text-brand-700">{ROLE[u.role]}</span>
                 </td>
                 <td className="px-4 py-3">{u.reportsCount ?? 0}</td>
                 <td className="px-4 py-3 text-slate-500">{formatShortDate(u.createdAt)}</td>

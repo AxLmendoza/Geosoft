@@ -38,7 +38,7 @@ export default function PhotoAttach({ value, onChange, label = 'Adjuntar foto (o
           type="button"
           onClick={() => input.current?.click()}
           disabled={busy}
-          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50 disabled:opacity-50"
+          className="flex items-center gap-2 rounded-xl px-3 py-2.5 text-sm font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50 disabled:opacity-50"
         >
           <CameraIcon className="size-5" /> {busy ? 'Preparando foto…' : label}
         </button>

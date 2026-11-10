@@ -23,7 +23,7 @@ export default function RegisterView() {
 
   return (
     <>
-      <h1 className="text-2xl font-extrabold text-slate-900">Crear cuenta</h1>
+      <h1 className="text-2xl font-semibold text-slate-900">Crear cuenta</h1>
       <p className="mt-1 text-sm text-slate-500">Te enviaremos un código de 6 dígitos para confirmar tu correo.</p>
 
       <form onSubmit={handleSubmit((data) => mutate(data))} className="mt-6 space-y-4" noValidate>
@@ -57,7 +57,7 @@ export default function RegisterView() {
       </form>
 
       <nav className="mt-6 text-center text-sm">
-        <Link to="/auth/login" className="text-slate-600">¿Ya tienes cuenta? <b className="text-indigo-600">Inicia sesión</b></Link>
+        <Link to="/auth/login" className="text-slate-600">¿Ya tienes cuenta? <b className="text-brand-600">Inicia sesión</b></Link>
       </nav>
     </>
   )

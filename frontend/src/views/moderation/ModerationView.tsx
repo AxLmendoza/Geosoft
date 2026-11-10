@@ -4,6 +4,7 @@ import { getFlags } from '@/api/ModerationAPI'
 import FlagsPanel from '@/components/moderation/FlagsPanel'
 import ReportsPanel from '@/components/moderation/ReportsPanel'
 import BlacklistPanel from '@/components/moderation/BlacklistPanel'
+import { FadeIn, m, SPRING } from '@/components/ui/Motion'
 
 /** Moderación de contenido. La gestión de usuarios tiene su propia sección (/users). */
 export default function ModerationView() {
@@ -22,20 +23,25 @@ export default function ModerationView() {
         <p className="page-subtitle">Revisa denuncias de información falsa, imágenes no aptas o spam, y controla qué se publica en el mapa.</p>
       </header>
       <TabGroup>
-        <TabList className="flex gap-6 overflow-x-auto border-b border-slate-200">
+        <TabList className="flex gap-6 overflow-x-auto border-b border-line">
           {tabs.map((t) => (
             <Tab
               key={t.name}
-              className="-mb-px flex shrink-0 items-center gap-2 border-b-2 border-transparent pb-3 text-sm font-semibold text-slate-500 outline-none data-[hover]:text-slate-800 data-[selected]:border-indigo-600 data-[selected]:text-indigo-700"
+              className="relative -mb-px flex min-h-11 shrink-0 items-center gap-2 rounded-t-lg pb-3 pt-1 text-[15px] font-semibold text-slate-500 outline-none transition-colors data-[focus]:outline-2 data-[focus]:outline-brand-600 data-[hover]:text-slate-800 data-[selected]:text-brand-700"
             >
-              {t.name}
-              {!!t.badge && <span className="rounded-full bg-red-600 px-1.5 text-xs text-white">{t.badge}</span>}
+              {({ selected }) => (
+                <>
+                  {t.name}
+                  {!!t.badge && <span className="min-w-5 rounded-full bg-red-600 px-1.5 text-center text-xs tabular-nums text-white">{t.badge}</span>}
+                  {selected && <m.span layoutId="moderation-tab" transition={SPRING} className="absolute inset-x-0 -bottom-px h-0.5 rounded-full bg-brand-600" aria-hidden />}
+                </>
+              )}
             </Tab>
           ))}
         </TabList>
         <TabPanels className="mt-5">
           {tabs.map((t) => (
-            <TabPanel key={t.name}>{t.panel}</TabPanel>
+            <TabPanel key={t.name}><FadeIn>{t.panel}</FadeIn></TabPanel>
           ))}
         </TabPanels>
       </TabGroup>

@@ -12,19 +12,19 @@ export default function ActionMenu({ actions, label = 'Más acciones' }: { actio
   if (!visible.length) return null
   return (
     <Menu>
-      <MenuButton className="btn-secondary btn-compact">
-        {label} <ChevronDownIcon className="size-4 text-slate-400" aria-hidden />
+      <MenuButton className="group btn-secondary btn-compact">
+        {label} <ChevronDownIcon className="size-4 text-slate-400 transition-transform group-data-[open]:rotate-180" aria-hidden />
       </MenuButton>
       <MenuItems
         anchor="bottom end"
         transition
-        className="z-[1300] w-56 rounded-lg border border-slate-200 bg-white p-1 shadow-lg [--anchor-gap:4px] focus:outline-none data-[closed]:opacity-0"
+        className="z-[1300] w-60 origin-top-right rounded-xl border border-line bg-white p-1 shadow-pop [--anchor-gap:6px] focus:outline-none transition duration-150 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
       >
         {visible.map((a) => (
           <MenuItem key={a.label} disabled={a.disabled}>
             <button
               onClick={a.onClick}
-              className={`w-full rounded-md px-3 py-2 text-left text-sm data-[disabled]:opacity-40 ${a.danger ? 'text-red-700 data-[focus]:bg-red-50' : 'text-slate-700 data-[focus]:bg-slate-100'}`}
+              className={`flex min-h-10 w-full items-center rounded-lg px-3 py-2 text-left text-sm font-medium data-[disabled]:opacity-40 ${a.danger ? 'text-red-700 data-[focus]:bg-red-50' : 'text-slate-700 data-[focus]:bg-slate-100 data-[focus]:text-slate-900'}`}
             >
               {a.label}
             </button>

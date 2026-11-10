@@ -66,8 +66,8 @@ export default function ImageInput({ value, onChange, error }: Props) {
 
   if (processing) {
     return (
-      <div role="status" className="flex items-center justify-center gap-2 rounded-2xl bg-white/50 px-6 py-10 text-sm font-bold text-indigo-700">
-        <span className="size-4 animate-spin rounded-full border-2 border-indigo-600 border-t-transparent" /> Preparando la foto…
+      <div role="status" className="flex items-center justify-center gap-2 rounded-2xl bg-white/50 px-6 py-10 text-sm font-bold text-brand-700">
+        <span className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" /> Preparando la foto…
       </div>
     )
   }
@@ -82,7 +82,7 @@ export default function ImageInput({ value, onChange, error }: Props) {
           <button
             type="button"
             onClick={() => cameraInput.current?.click()}
-            className="flex flex-col items-center gap-2 rounded-2xl bg-indigo-600 px-4 py-8 font-bold text-white shadow-lg active:scale-95"
+            className="flex flex-col items-center gap-2 rounded-2xl bg-brand-600 px-4 py-8 font-bold text-white shadow-lg active:scale-95"
           >
             <CameraIcon className="size-12" />
             Tomar foto
@@ -90,7 +90,7 @@ export default function ImageInput({ value, onChange, error }: Props) {
           <button
             type="button"
             onClick={() => galleryInput.current?.click()}
-            className="flex flex-col items-center gap-2 rounded-2xl bg-white px-4 py-8 font-bold text-indigo-700 ring-2 ring-indigo-200 active:scale-95"
+            className="flex flex-col items-center gap-2 rounded-2xl bg-white px-4 py-8 font-bold text-brand-700 ring-2 ring-brand-200 active:scale-95"
           >
             <PhotoIcon className="size-12" />
             Galería
@@ -106,18 +106,18 @@ export default function ImageInput({ value, onChange, error }: Props) {
       <div
         {...getRootProps()}
         className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${
-          isDragActive ? 'border-indigo-500 bg-indigo-50' : 'border-slate-300 bg-white/40 hover:border-indigo-400 hover:bg-indigo-50/50'
+          isDragActive ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-white/40 hover:border-brand-400 hover:bg-brand-50/50'
         }`}
       >
         <input {...getInputProps()} />
-        <CloudArrowUpIcon className="size-12 text-indigo-500" />
+        <CloudArrowUpIcon className="size-12 text-brand-500" />
         <p className="font-bold text-slate-700">{isDragActive ? 'Suelta la imagen aquí' : 'Arrastra la foto del siniestro'}</p>
         <p className="text-sm text-slate-500">o haz clic para buscarla · JPG, PNG, WEBP · máx. {MAX_MB} MB</p>
       </div>
       <button
         type="button"
         onClick={() => setWebcamOpen(true)}
-        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-indigo-700 ring-1 ring-indigo-200 hover:bg-indigo-50"
+        className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl py-2.5 text-sm font-bold text-brand-700 ring-1 ring-brand-200 hover:bg-brand-50"
       >
         <VideoCameraIcon className="size-5" /> Usar cámara web
       </button>

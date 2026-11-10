@@ -35,8 +35,8 @@ export default function ConfirmAccountView() {
 
   return (
     <>
-      <EnvelopeOpenIcon className="mx-auto size-14 text-indigo-500" />
-      <h1 className="mt-3 text-center text-2xl font-extrabold text-slate-900">Confirma tu cuenta</h1>
+      <EnvelopeOpenIcon className="mx-auto size-14 text-brand-500" />
+      <h1 className="mt-3 text-center text-2xl font-semibold text-slate-900">Confirma tu cuenta</h1>
       <p className="mt-1 text-center text-sm text-slate-500">
         Ingresa el código de 6 dígitos que enviamos {known ? <>a <b>{known}</b></> : 'a tu correo'}. Caduca en pocos minutos.
       </p>
@@ -55,7 +55,7 @@ export default function ConfirmAccountView() {
 
       <nav className="mt-6 text-center text-sm">
         <Link to="/auth/request-code" state={{ email }} className="text-slate-600">
-          ¿El código expiró? <b className="text-indigo-600">Solicitar uno nuevo</b>
+          ¿El código expiró? <b className="text-brand-600">Solicitar uno nuevo</b>
         </Link>
       </nav>
     </>

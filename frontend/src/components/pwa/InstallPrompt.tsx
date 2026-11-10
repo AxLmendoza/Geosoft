@@ -81,7 +81,7 @@ export default function InstallPrompt() {
         )}
       </div>
       {deferred && (
-        <button onClick={install} className="flex shrink-0 items-center gap-1 rounded-xl bg-indigo-600 px-3 py-2 text-sm font-bold text-white hover:bg-indigo-700">
+        <button onClick={install} className="flex shrink-0 items-center gap-1 rounded-xl bg-brand-600 px-3 py-2 text-sm font-bold text-white hover:bg-brand-700">
           <ArrowDownTrayIcon className="size-4" /> Instalar
         </button>
       )}

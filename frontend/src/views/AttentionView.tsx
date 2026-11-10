@@ -103,13 +103,13 @@ export default function AttentionView() {
       ) : !list.data?.data.length ? (
         <EmptyState title="No hay reportes con estos filtros" text={show === 'abiertos' ? 'No hay reportes pendientes de atender.' : undefined} />
       ) : (
-        <ul className={`divide-y divide-slate-200 overflow-hidden rounded-xl border border-slate-200 bg-white transition-opacity ${list.isPlaceholderData ? 'opacity-60' : ''}`}>
+        <ul className={`divide-y divide-line overflow-hidden glass rounded-2xl transition-opacity ${list.isPlaceholderData ? 'opacity-60' : ''}`}>
           {list.data.data.map((r) => (
             <li key={r.id} className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
               <Link to={`/reports/${r.id}`} className="flex min-w-0 flex-1 items-start gap-3">
                 <img src={assetUrl(r.thumbUrl)} alt="" loading="lazy" decoding="async" className="size-14 shrink-0 rounded-lg bg-slate-200 object-cover" />
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold text-slate-900 hover:text-indigo-700">
+                  <p className="truncate font-semibold text-slate-900 hover:text-brand-700">
                     <span className="font-normal text-slate-400">#{r.id}</span> {r.title}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">

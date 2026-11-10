@@ -31,7 +31,7 @@ export const PIN_LEGEND = (Object.keys(PIN_KINDS) as PinKind[]).map((kind) => ({
  * El borde toma el color de la categoría y los reportes críticos "laten".
  */
 export function ReportPin({ report }: { report: Report }) {
-  const color = report.category?.color ?? '#4f46e5'
+  const color = report.category?.color ?? '#2556eb'
   const critical = report.severity === 'critica' && !isDone(report.status) ? ' gs-pin--critical' : ''
   const resolved = isDone(report.status) ? ' gs-pin--resolved' : ''
   return (

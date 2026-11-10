@@ -72,7 +72,7 @@ export default function CameraDialog({ open, onClose, onCapture }: Props) {
           type="button"
           onClick={capture}
           disabled={!!error}
-          className="flex size-16 items-center justify-center rounded-full bg-indigo-600 text-white shadow-lg ring-4 ring-indigo-200 hover:bg-indigo-700 disabled:opacity-40"
+          className="flex size-16 items-center justify-center rounded-full bg-brand-600 text-white shadow-lg ring-4 ring-brand-200 hover:bg-brand-700 disabled:opacity-40"
           aria-label="Capturar"
         >
           <CameraIcon className="size-8" />

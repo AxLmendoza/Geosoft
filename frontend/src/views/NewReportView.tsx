@@ -110,7 +110,7 @@ export default function NewReportView() {
           const selected = categories.find((c) => c.id === watch('categoryId'))
           if (!selected) return null
           return (
-            <p className="mt-3 flex items-start gap-2 rounded-xl bg-indigo-50/80 p-3 text-sm text-indigo-900 ring-1 ring-indigo-100">
+            <p className="mt-3 flex items-start gap-2 rounded-xl bg-brand-50/80 p-3 text-sm text-brand-900 ring-1 ring-brand-100">
               <BuildingOffice2Icon className="size-5 shrink-0" />
               {selected.area
                 ? selected.area.type === 'externa'
@@ -131,7 +131,7 @@ export default function NewReportView() {
                 <Radio
                   key={s.value}
                   value={s.value}
-                  className={`cursor-pointer rounded-lg py-2 text-center text-sm font-bold ring-1 ring-slate-200 data-[checked]:ring-2 data-[checked]:ring-indigo-500 ${SEVERITY[s.value].className}`}
+                  className={`cursor-pointer rounded-lg py-2 text-center text-sm font-bold ring-1 ring-slate-200 data-[checked]:ring-2 data-[checked]:ring-brand-500 ${SEVERITY[s.value].className}`}
                 >
                   {s.label}
                 </Radio>
@@ -172,7 +172,7 @@ export default function NewReportView() {
               <Switch
                 checked={field.value}
                 onChange={field.onChange}
-                className="group relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full bg-slate-300 transition data-[checked]:bg-indigo-600"
+                className="group relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full bg-slate-300 transition data-[checked]:bg-brand-600"
               >
                 <span className="pointer-events-none mt-1 ml-1 inline-block size-5 rounded-full bg-white shadow transition group-data-[checked]:translate-x-5" />
               </Switch>
@@ -183,7 +183,7 @@ export default function NewReportView() {
 
       {/* En el celular el botón queda fijo sobre la barra inferior para no tener que bajar todo el formulario */}
       <div className="sticky bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-20 md:static">
-        <button type="submit" disabled={isPending} className="btn-primary w-full py-4 text-lg shadow-xl shadow-indigo-600/30">
+        <button type="submit" disabled={isPending} className="btn-primary w-full py-4 text-lg shadow-xl shadow-brand-600/30">
           {isPending ? (
             <><span className="size-5 animate-spin rounded-full border-2 border-white border-t-transparent" /> Subiendo reporte…</>
           ) : 'Publicar reporte'}

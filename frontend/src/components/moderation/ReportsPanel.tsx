@@ -70,7 +70,7 @@ export default function ReportsPanel() {
             <div key={r.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
               <img src={assetUrl(r.thumbUrl)} alt="" className={`size-16 shrink-0 rounded-lg object-cover ${r.hidden ? 'opacity-40 grayscale' : ''}`} />
               <div className="min-w-0 flex-1">
-                <Link to={`/reports/${r.id}`} className="block truncate font-bold text-slate-900 hover:text-indigo-700">{r.title}</Link>
+                <Link to={`/reports/${r.id}`} className="block truncate font-bold text-slate-900 hover:text-brand-700">{r.title}</Link>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">
                   <span className="font-bold" style={{ color: r.category.color }}>{r.category.name}</span>
                   <StatusBadge status={r.status} />

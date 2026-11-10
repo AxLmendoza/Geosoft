@@ -5,7 +5,7 @@ export function StatusBadge({ status, short = false }: { status: ReportStatus; s
   const s = STATUS[status]
   return (
     <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${s.className}`}>
-      <span className={`size-1.5 rounded-full ${s.dot}`} />
+      <span className={`size-1.5 rounded-full ${s.dot}`} aria-hidden />
       {short ? s.short : s.label}
     </span>
   )
@@ -14,8 +14,9 @@ export function StatusBadge({ status, short = false }: { status: ReportStatus; s
 export function SeverityBadge({ severity }: { severity: Severity }) {
   const s = SEVERITY[severity]
   return (
-    <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ${s.className}`}>
-      <span className={`size-1.5 rounded-full ${s.dot}`} />
+    <span className={`inline-flex items-center gap-1.5 whitespace-nowrap rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ring-current/15 ${s.className}`}>
+      <span className={`size-1.5 rounded-full ${s.dot}`} aria-hidden />
+      <span className="sr-only">Gravedad </span>
       {s.label}
     </span>
   )

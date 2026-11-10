@@ -40,7 +40,7 @@ export default function ReportPopup({ report }: { report: Report }) {
         <CommunityVotes report={report} compact />
         <Link
           to={`/reports/${report.id}`}
-          className="block rounded-lg bg-indigo-600 py-2 text-center text-sm font-bold !text-white hover:bg-indigo-700"
+          className="block rounded-lg bg-brand-600 py-2 text-center text-sm font-bold !text-white hover:bg-brand-700"
         >
           Ver detalle
         </Link>

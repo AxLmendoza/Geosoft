@@ -4,6 +4,7 @@ import { assetUrl } from '@/lib/media'
 import { EXIT_STATUSES, HISTORY_KIND, ROLE, STATUS, TRACK_STEPS } from '@/lib/labels'
 import { useCategories } from '@/hooks/useCategories'
 import ImageViewer from '@/components/ui/ImageViewer'
+import { m } from '@/components/ui/Motion'
 import type { Report, ReportHistoryItem, ReportStatus } from '@/types'
 
 /** Paso más avanzado alcanzado en la ruta normal (los pasos saltados cuentan como completados) */
@@ -37,14 +38,14 @@ function stepStates(report: Report): StepState[] {
 function Dot({ state }: { state: StepState }) {
   if (state === 'done')
     return (
-      <span className="flex size-6 items-center justify-center rounded-full bg-indigo-600 text-white">
+      <span className="flex size-6 items-center justify-center rounded-full bg-brand-600 text-white">
         <CheckIcon className="size-4" aria-hidden />
       </span>
     )
   if (state === 'current')
     return (
-      <span className="flex size-6 items-center justify-center rounded-full bg-white ring-2 ring-indigo-600">
-        <span className="size-2.5 rounded-full bg-indigo-600" />
+      <span className="flex size-6 items-center justify-center rounded-full bg-white ring-2 ring-brand-600">
+        <span className="size-2.5 rounded-full bg-brand-600" />
       </span>
     )
   return <span className="block size-6 rounded-full border-2 border-slate-300 bg-white" />
@@ -68,7 +69,13 @@ export function ProgressTracker({ report, compact = false }: { report: Report; c
     return (
       <div aria-label={`Progreso: ${STATUS[report.status].label}`}>
         <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
-          <div className={`h-full rounded-full ${exit ? 'bg-slate-400' : 'bg-indigo-600'}`} style={{ width: `${Math.max(pct, 6)}%` }} />
+          <m.div
+            initial={{ scaleX: 0 }}
+            animate={{ scaleX: 1 }}
+            transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1], delay: 0.15 }}
+            className={`h-full origin-left rounded-full ${exit ? 'bg-slate-400' : 'bg-gradient-to-r from-brand-500 to-brand-700'}`}
+            style={{ width: `${Math.max(pct, 6)}%` }}
+          />
         </div>
         <p className="mt-1.5 text-xs text-slate-600">
           {exit ? <>Finalizado · <b>{STATUS[report.status].short}</b></> : <>Paso {reached + 1} de {TRACK_STEPS.length} · <b>{STATUS[TRACK_STEPS[reached]].short}</b></>}
@@ -85,9 +92,9 @@ export function ProgressTracker({ report, compact = false }: { report: Report; c
       <ol className="hidden @xl:flex">
         {TRACK_STEPS.map((step, i) => (
           <li key={step} className="relative flex flex-1 flex-col items-center text-center" aria-current={states[i] === 'current' ? 'step' : undefined}>
-            {i > 0 && <span className={`absolute right-1/2 top-3 h-0.5 w-full ${states[i] === 'todo' ? 'bg-slate-200' : 'bg-indigo-600'}`} aria-hidden />}
+            {i > 0 && <span className={`absolute right-1/2 top-3 h-0.5 w-full ${states[i] === 'todo' ? 'bg-slate-200' : 'bg-brand-600'}`} aria-hidden />}
             <span className="relative"><Dot state={states[i]} /></span>
-            <span className={`mt-2 px-1 text-xs leading-tight ${states[i] === 'current' ? 'font-bold text-indigo-700' : states[i] === 'done' ? 'font-medium text-slate-700' : 'text-slate-400'}`}>
+            <span className={`mt-2 px-1 text-xs leading-tight ${states[i] === 'current' ? 'font-bold text-brand-700' : states[i] === 'done' ? 'font-medium text-slate-700' : 'text-slate-400'}`}>
               {STATUS[step].short}
             </span>
           </li>
@@ -101,10 +108,10 @@ export function ProgressTracker({ report, compact = false }: { report: Report; c
           const last = i === TRACK_STEPS.length - 1
           return (
             <li key={step} className="relative flex gap-3 pb-4 last:pb-0" aria-current={state === 'current' ? 'step' : undefined}>
-              {!last && <span className={`absolute left-[11px] top-6 h-[calc(100%-1.5rem)] w-0.5 ${states[i + 1] === 'todo' ? 'bg-slate-200' : 'bg-indigo-600'}`} aria-hidden />}
+              {!last && <span className={`absolute left-[11px] top-6 h-[calc(100%-1.5rem)] w-0.5 ${states[i + 1] === 'todo' ? 'bg-slate-200' : 'bg-brand-600'}`} aria-hidden />}
               <span className="relative z-10 shrink-0"><Dot state={state} /></span>
               <div className="min-w-0 pt-0.5">
-                <p className={`text-sm leading-tight ${state === 'current' ? 'font-bold text-indigo-700' : state === 'done' ? 'font-medium text-slate-800' : 'text-slate-400'}`}>
+                <p className={`text-sm leading-tight ${state === 'current' ? 'font-bold text-brand-700' : state === 'done' ? 'font-medium text-slate-800' : 'text-slate-400'}`}>
                   {STATUS[step].label}
                 </p>
                 {state !== 'todo' && dates.get(step) && <p className="text-xs text-slate-500">{formatRelativeDay(dates.get(step)!)}</p>}
@@ -146,7 +153,7 @@ export function CurrentStatusCard({ report }: { report: Report }) {
   return (
     <div>
       <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estado actual</p>
-      <p className="mt-1 flex items-center gap-2 text-xl font-bold text-slate-900">
+      <p className="mt-1 flex items-center gap-2 font-display text-xl font-semibold text-slate-900">
         <span className={`size-2.5 rounded-full ${s.dot}`} aria-hidden /> {s.label}
       </p>
       <p className="mt-1 text-sm text-slate-600"><AreaLine report={report} /></p>
@@ -183,7 +190,7 @@ export function HistoryList({ history }: { history: ReportHistoryItem[] }) {
   return (
     <ol className="space-y-4">
       {items.map((h) => (
-        <li key={h.id} className="border-l-2 border-slate-200 pl-4">
+        <li key={h.id} className="border-l-2 border-line pl-4">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="text-sm font-semibold text-slate-900">{entryTitle(h)}</p>
             {h.internal && <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white" title="Solo la ve el personal">Nota interna</span>}
@@ -197,7 +204,7 @@ export function HistoryList({ history }: { history: ReportHistoryItem[] }) {
               src={assetUrl(h.imageUrl)}
               thumbSrc={assetUrl(h.thumbUrl ?? h.imageUrl)}
               alt={`Evidencia: ${h.note ?? entryTitle(h)}`}
-              className="mt-2 size-24 rounded-lg border border-slate-200"
+              className="mt-2 size-24 rounded-lg border border-line"
               thumbClassName="size-24 object-cover"
             />
           )}
@@ -214,7 +221,7 @@ export default function ReportTimeline({ report }: { report: Report }) {
       <h2 id="seguimiento" className="sr-only">Seguimiento</h2>
       <CurrentStatusCard report={report} />
       <ProgressTracker report={report} />
-      <div className="border-t border-slate-200 pt-5">
+      <div className="border-t border-line pt-5">
         <h3 className="mb-3 text-sm font-bold text-slate-900">Historial de movimientos</h3>
         <HistoryList history={report.history ?? []} />
         {!report.isOwner && !report.canManage && (

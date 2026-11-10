@@ -135,10 +135,10 @@ export default function ReportFormDialog({ open, report, onClose }: Props) {
 
         <div className="flex flex-wrap gap-4 rounded-xl bg-white/50 p-3 text-sm font-semibold text-slate-700">
           <label className="flex items-center gap-2">
-            <input type="checkbox" className="size-4 accent-indigo-600" {...register('anonymous')} /> Anónimo al público
+            <input type="checkbox" className="size-4 accent-brand-600" {...register('anonymous')} /> Anónimo al público
           </label>
           <label className="flex items-center gap-2">
-            <input type="checkbox" className="size-4 accent-indigo-600" {...register('hidden')} /> Oculto en el mapa
+            <input type="checkbox" className="size-4 accent-brand-600" {...register('hidden')} /> Oculto en el mapa
           </label>
         </div>
         {watch('hidden') && (

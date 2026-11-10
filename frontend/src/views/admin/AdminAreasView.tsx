@@ -63,7 +63,7 @@ function AreaDialog({ area, open, onClose }: { area: Area | null; open: boolean;
         </div>
         {area && (
           <label className="flex items-center gap-2 text-sm font-semibold text-slate-700">
-            <input type="checkbox" className="size-4 accent-indigo-600" checked={active} onChange={(e) => setActive(e.target.checked)} />
+            <input type="checkbox" className="size-4 accent-brand-600" checked={active} onChange={(e) => setActive(e.target.checked)} />
             Activa (si la desactivas ya no recibe asignaciones; su historial se conserva)
           </label>
         )}
@@ -108,7 +108,7 @@ export default function AdminAreasView() {
 
       <section className="space-y-3">
         <div>
-          <h2 className="text-lg font-bold text-slate-900">¿Quién atiende cada tipo de problema?</h2>
+          <h2 className="font-display text-lg font-semibold text-slate-900">¿Quién atiende cada tipo de problema?</h2>
           <p className="text-sm text-slate-500">Los reportes nuevos de cada categoría se asignan automáticamente a esta área.</p>
         </div>
         {categories.isLoading ? (
@@ -137,7 +137,7 @@ export default function AdminAreasView() {
       </section>
 
       <section className="space-y-3">
-        <h2 className="text-lg font-bold text-slate-900">Áreas y dependencias</h2>
+        <h2 className="font-display text-lg font-semibold text-slate-900">Áreas y dependencias</h2>
         {areas.isLoading ? (
           <ListSkeleton rows={4} />
         ) : areas.isError ? (
@@ -156,9 +156,9 @@ export default function AdminAreasView() {
                 </div>
                 {a.description && <p className="text-sm text-slate-600">{a.description}</p>}
                 <dl className="mt-auto grid grid-cols-3 gap-2 pt-2 text-center">
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Abiertos</dt><dd className="text-lg font-extrabold tabular-nums">{a.openReports}</dd></div>
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Personal</dt><dd className="text-lg font-extrabold tabular-nums">{a.membersCount}</dd></div>
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Categorías</dt><dd className="text-lg font-extrabold tabular-nums">{a.categoriesCount}</dd></div>
+                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Abiertos</dt><dd className="text-lg font-bold tabular-nums">{a.openReports}</dd></div>
+                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Personal</dt><dd className="text-lg font-bold tabular-nums">{a.membersCount}</dd></div>
+                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Categorías</dt><dd className="text-lg font-bold tabular-nums">{a.categoriesCount}</dd></div>
                 </dl>
                 {a.contactEmail && <p className="truncate text-xs text-slate-500">{a.contactEmail}</p>}
               </li>

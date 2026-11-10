@@ -41,7 +41,7 @@ export default function FlagDialog({ reportId, open, onClose }: Props) {
         maxLength={300}
         rows={3}
         placeholder="Cuéntanos más (opcional)"
-        className="mt-4 w-full rounded-lg border-slate-300 p-3 text-sm ring-1 ring-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+        className="mt-4 w-full rounded-lg border-slate-300 p-3 text-sm ring-1 ring-slate-300 focus:outline-none focus:ring-2 focus:ring-brand-500"
       />
       <button
         onClick={() => mutate({ id: reportId, reason, comment })}
