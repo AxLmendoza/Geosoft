@@ -32,15 +32,25 @@ export type FlagReason = (typeof FLAG_REASONS)[number]
 export const FLAG_STATUS = ['pendiente', 'procedente', 'descartada'] as const
 export type FlagStatus = (typeof FLAG_STATUS)[number]
 
-/** Voto de la comunidad: "👏 ya quedó" o "sigue igual" */
+/**
+ * Confirmación ciudadana: "Confirmar que se resolvió" (solucionado) o "El problema continúa" (sin_solucion).
+ * Se guarda en report_votes (una respuesta por persona). Nunca cambia el estado oficial.
+ */
 export const VOTE_VALUES = ['solucionado', 'sin_solucion'] as const
 export type VoteValue = (typeof VOTE_VALUES)[number]
 
-/** Estados que puede poner el propio autor del reporte */
+/**
+ * Valores que acepta PATCH /reports/:id/status del autor.
+ * 'resuelto' se conserva por compatibilidad pero ya NO cambia el estado:
+ * se registra como confirmación ciudadana.
+ */
 export const OWNER_STATUSES = ['en_proceso', 'resuelto'] as const
 
 /** Estados que puede poner el personal operativo en los reportes de su área */
 export const OPERATIVO_STATUSES: ReportStatus[] = ['en_proceso', 'resuelto']
+
+/** Estados en los que el ciudadano puede confirmar la solución o avisar que el problema continúa */
+export const CONFIRMABLE_STATUSES: ReportStatus[] = ['pendiente', 'en_revision', 'asignado', 'en_proceso', 'resuelto']
 
 /** Estados que se consideran "abiertos" para estadísticas, prioridad y recordatorios */
 export const OPEN_STATUSES: ReportStatus[] = ['pendiente', 'en_revision', 'asignado', 'en_proceso']

@@ -1,7 +1,7 @@
 import type { Report } from '../models/Report'
 import type { ReportHistory } from '../models/ReportHistory'
 import type { User } from '../models/User'
-import type { VoteSummary } from './votes'
+import { emptySummary, type VoteSummary } from './votes'
 import { isRetiredStatus, removalDate } from './reportStatus'
 import { canManageReport, canSeeTracking, isStaff } from './permissions'
 
@@ -45,7 +45,9 @@ export function serializeHistory(history: ReportHistory[], report: Report, viewe
  * el autor solo se muestra si no es anónimo, si lo ve su dueño
  * o si lo ve un moderador/admin.
  */
-export function serializeReport(report: Report, viewer?: User | null, votes?: VoteSummary) {
+export type AssigneeMap = Map<number, { id: number; name: string; active: boolean }>
+
+export function serializeReport(report: Report, viewer?: User | null, votes?: VoteSummary, assignees?: AssigneeMap) {
   const json = report.toJSON() as Record<string, any>
   const staff = isStaff(viewer)
   const isOwner = !!viewer && viewer.id === report.userId
@@ -55,7 +57,9 @@ export function serializeReport(report: Report, viewer?: User | null, votes?: Vo
   json.lng = Number(json.lng)
   json.isOwner = isOwner
   json.canManage = canManageReport(viewer, report)
-  json.votes = votes ?? { solucionado: 0, sin_solucion: 0, mine: null }
+  json.votes = votes ?? emptySummary()
+  // Señal de revisión: figura como resuelto pero un ciudadano indica que el problema continúa
+  json.needsReview = isRetiredStatus(report.status) && json.votes.afterResolution.sin_solucion > 0
   // Cuándo se retira del mapa público (solo si está resuelto o cerrado)
   json.removalAt = isRetiredStatus(report.status) ? removalDate(report.resolvedAt) : null
   json.area = report.area ? { id: report.area.id, name: report.area.name, type: report.area.type } : null
@@ -66,7 +70,12 @@ export function serializeReport(report: Report, viewer?: User | null, votes?: Vo
 
   delete json.user
   if (!showAuthor) delete json.userId
-  if (!json.canManage) delete json.assignedById
+  // Responsable directo: dato interno del personal que atiende el reporte
+  json.assignee = json.canManage && report.assigneeId ? assignees?.get(report.assigneeId) ?? { id: report.assigneeId, name: null, active: true } : null
+  if (!json.canManage) {
+    delete json.assignedById
+    delete json.assigneeId
+  }
   if (!staff) {
     delete json.hiddenReason
     delete json.flags

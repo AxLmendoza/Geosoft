@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom'
 import { useAuth } from '@/hooks/useAuth'
 import UsersPanel from '@/components/moderation/UsersPanel'
 
@@ -9,7 +10,9 @@ export default function UsersView() {
       <header>
         <h1 className="page-title">Usuarios</h1>
         <p className="page-subtitle">
-          {isAdmin ? 'Asigna roles (personal operativo con su área, moderadores) y suspende cuentas.' : 'Consulta usuarios y suspende cuentas que incumplan las reglas.'}
+          {isAdmin ? (
+            <>Ciudadanos y cuentas registradas por su cuenta. Para dar de alta o administrar al personal usa <Link to="/admin/staff" className="btn-link">Responsables</Link>.</>
+          ) : 'Consulta usuarios y suspende cuentas que incumplan las reglas.'}
         </p>
       </header>
       <UsersPanel />

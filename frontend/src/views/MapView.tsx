@@ -1,7 +1,7 @@
-import { useMemo, type ReactNode } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams } from 'react-router-dom'
-import { FunnelIcon, ListBulletIcon, XMarkIcon } from '@heroicons/react/24/outline'
+import { FunnelIcon, InformationCircleIcon, ListBulletIcon, XMarkIcon } from '@heroicons/react/24/outline'
 import { getReports } from '@/api/ReportAPI'
 import { useCategories } from '@/hooks/useCategories'
 import { STATUS_OPTIONS } from '@/lib/labels'
@@ -9,7 +9,7 @@ import ReportMap from '@/components/map/ReportMap'
 import ReportCard from '@/components/reports/ReportCard'
 import { ReportCardSkeleton } from '@/components/ui/States'
 import SelectBox from '@/components/ui/SelectBox'
-import { PIN_LEGEND, PinStatusIcon } from '@/components/map/pinIcons'
+import MapLegend from '@/components/map/MapLegend'
 import type { ReportFilters, ReportStatus } from '@/types'
 import { m, Stagger, StaggerItem } from '@/components/ui/Motion'
 
@@ -33,7 +33,33 @@ function MapPanel({ title, onClose, children }: { title: string; onClose: () => 
   )
 }
 
+const LEGEND_KEY = 'gs-map-legend'
+
+/** Simbología abierta por defecto en escritorio y cerrada en celular; se recuerda la preferencia */
+function useLegendOpen() {
+  const [open, setOpen] = useState(() => {
+    try {
+      const saved = localStorage.getItem(LEGEND_KEY)
+      if (saved !== null) return saved === '1'
+    } catch {
+      /* almacenamiento no disponible */
+    }
+    return window.matchMedia('(min-width: 768px)').matches
+  })
+  const toggle = () =>
+    setOpen((v) => {
+      try {
+        localStorage.setItem(LEGEND_KEY, v ? '0' : '1')
+      } catch {
+        /* sin almacenamiento: solo dura la sesión */
+      }
+      return !v
+    })
+  return [open, toggle] as const
+}
+
 export default function MapView() {
+  const [legendOpen, toggleLegend] = useLegendOpen()
   const [params, setParams] = useSearchParams()
   const category = Number(params.get('category')) || 0
   const status = (params.get('status') ?? '') as ReportStatus | ''
@@ -75,22 +101,32 @@ export default function MapView() {
         <m.div
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
-          className="absolute left-3 top-3 z-20 flex flex-wrap items-center gap-2 md:left-4"
+          className="absolute left-3 right-14 top-3 z-20 flex flex-col items-start gap-2 md:left-4 md:right-auto"
           style={{ top: 'max(0.75rem, env(safe-area-inset-top))' }}
         >
+          <div className="flex flex-wrap items-center gap-2">
           <button onClick={() => setParam('panel', 'filtros')} className="glass-btn !px-3 !py-2 !text-sm">
             <FunnelIcon className="size-4" aria-hidden /> Filtros{activeFilters ? ` (${activeFilters})` : ''}
           </button>
           <button onClick={() => setParam('panel', 'recientes')} className="glass-btn !px-3 !py-2 !text-sm">
             <ListBulletIcon className="size-4" aria-hidden /> Ver lista
           </button>
-          <span className="glass-btn pointer-events-none !text-xs" aria-live="polite">
-            <span className="relative flex size-2" aria-hidden>
-              <span className="absolute inline-flex size-full animate-ping rounded-full bg-emerald-400 opacity-60" />
-              <span className="relative inline-flex size-2 rounded-full bg-emerald-500" />
-            </span>
-            {count}
-          </span>
+          <button onClick={toggleLegend} className="glass-btn !px-3 !py-2 !text-sm" aria-expanded={legendOpen} aria-controls="map-legend">
+            <InformationCircleIcon className="size-4" aria-hidden /> Simbología
+          </button>
+          <span className="glass-btn pointer-events-none !text-xs" aria-live="polite">{count}</span>
+          </div>
+          {legendOpen && (
+            <div id="map-legend" className="glass-strong w-[17rem] max-w-full rounded-2xl bg-white/95 p-3.5 backdrop-blur-xl">
+              <div className="mb-2 flex items-center justify-between">
+                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Simbología</p>
+                <button onClick={toggleLegend} className="inline-flex size-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Ocultar simbología">
+                  <XMarkIcon className="size-4" aria-hidden />
+                </button>
+              </div>
+              <MapLegend />
+            </div>
+          )}
         </m.div>
       )}
 
@@ -115,14 +151,8 @@ export default function MapView() {
             {isError && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">No se pudieron cargar los reportes. Se reintentará automáticamente.</p>}
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Significado de los pines</p>
-              <ul className="space-y-1 rounded-xl bg-slate-50 p-3 ring-1 ring-inset ring-line">
-                {PIN_LEGEND.map((p) => (
-                  <li key={p.kind} className="flex items-center gap-2 text-sm text-slate-700">
-                    <PinStatusIcon kind={p.kind} className="size-4" /> {p.label}
-                  </li>
-                ))}
-              </ul>
+              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Simbología del mapa</p>
+              <MapLegend className="rounded-xl bg-slate-50 p-3 ring-1 ring-inset ring-line" />
             </div>
 
           </div>

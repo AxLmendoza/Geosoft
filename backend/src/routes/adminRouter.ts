@@ -3,6 +3,7 @@ import { body, param, query } from 'express-validator'
 import { AdminController } from '../controllers/AdminController'
 import { AdminReportController } from '../controllers/AdminReportController'
 import { AreaController } from '../controllers/AreaController'
+import { ASSIGNABLE_STAFF_ROLES, StaffController } from '../controllers/StaffController'
 import { authenticate, requireRole } from '../middleware/auth'
 import { handleInputErrors } from '../middleware/validation'
 import { uploadImage } from '../middleware/upload'
@@ -26,6 +27,64 @@ router.patch(
   body('areaId').if(body('role').equals('operativo')).isInt().withMessage('Selecciona el área del personal operativo').toInt(),
   handleInputErrors,
   ah(AdminController.setRole),
+)
+
+// ---------- Responsables (IAM interno: alta por invitación, roles, activación) ----------
+const staffId = param('userId').isInt().withMessage('ID no válido')
+const staffName = (required: boolean) =>
+  (required ? body('name') : body('name').optional())
+    .trim()
+    .isLength({ min: 3, max: 60 })
+    .withMessage('El nombre completo debe tener entre 3 y 60 caracteres')
+    .matches(/^[^<>]+$/)
+    .withMessage('El nombre contiene caracteres no permitidos')
+const staffEmail = (required: boolean) =>
+  (required ? body('email') : body('email').optional())
+    .trim()
+    .isEmail()
+    .withMessage('Correo no válido')
+    .isLength({ max: 120 })
+    .normalizeEmail({ gmail_remove_dots: false })
+
+router.get('/staff/meta', ah(StaffController.meta))
+router.get(
+  '/staff',
+  query('q').optional().trim().isLength({ max: 100 }),
+  query('areaId').optional().isInt(),
+  query('role').optional().isIn(['operativo', 'moderador', 'admin']),
+  query('status').optional().isIn(['activo', 'pendiente', 'desactivado', 'suspendido']),
+  handleInputErrors,
+  ah(StaffController.list),
+)
+router.get('/staff/:userId', staffId, handleInputErrors, ah(StaffController.get))
+router.get('/staff/:userId/activity', staffId, handleInputErrors, ah(StaffController.activity))
+router.post(
+  '/staff',
+  staffName(true),
+  staffEmail(true),
+  body('role').isIn([...ASSIGNABLE_STAFF_ROLES]).withMessage('Elige el rol: personal operativo o moderador'),
+  body('areaId').if(body('role').equals('operativo')).isInt().withMessage('Selecciona el área o servicio responsable').toInt(),
+  handleInputErrors,
+  ah(StaffController.create),
+)
+router.patch(
+  '/staff/:userId',
+  staffId,
+  staffName(false),
+  staffEmail(false),
+  body('role').optional().isIn([...ASSIGNABLE_STAFF_ROLES]).withMessage('Rol no válido'),
+  body('areaId').optional({ values: 'null' }).isInt().withMessage('Área no válida').toInt(),
+  handleInputErrors,
+  ah(StaffController.update),
+)
+router.patch('/staff/:userId/status', staffId, body('active').isBoolean().withMessage('Estado no válido').toBoolean(), handleInputErrors, ah(StaffController.setActive))
+router.post('/staff/:userId/invitation', staffId, handleInputErrors, ah(StaffController.resendInvitation))
+router.post(
+  '/staff/:userId/reassign',
+  staffId,
+  body('toUserId').custom((v) => v === null || Number.isInteger(Number(v))).withMessage('Responsable no válido'),
+  handleInputErrors,
+  ah(StaffController.reassign),
 )
 
 // ---------- Áreas y categorías (configurables sin tocar código) ----------

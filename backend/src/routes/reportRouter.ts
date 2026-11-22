@@ -47,7 +47,7 @@ router.post(
   ah(ReportController.create),
 )
 
-// El autor: "ya me dieron seguimiento" / "ya quedó"
+// El autor: "ya me dieron seguimiento". "resuelto" se registra como confirmación (no cambia el estado)
 router.patch(
   '/:reportId/status',
   authenticate,
@@ -69,15 +69,19 @@ router.post(
   ah(ReportController.addInfo),
 )
 
-// La comunidad: 👏 ya quedó / sigue igual
-router.post(
-  '/:reportId/vote',
+// Confirmación ciudadana: "Confirmar que se resolvió" / "El problema continúa".
+// Solo registra la respuesta; nunca cambia el estado oficial.
+const confirmationRules = [
   authenticate,
   reportId,
-  body('value').isIn([...VOTE_VALUES]).withMessage('Voto no válido'),
+  body('value').isIn([...VOTE_VALUES]).withMessage('Respuesta no válida'),
+  body('note').optional().trim().isLength({ max: 300 }).withMessage('Máximo 300 caracteres'),
   handleInputErrors,
-  ah(ReportController.vote),
-)
+  ah(ReportController.confirm),
+]
+router.post('/:reportId/confirmation', ...confirmationRules)
+// Ruta anterior ("Ya quedó / Sigue igual"), se conserva por compatibilidad
+router.post('/:reportId/vote', ...confirmationRules)
 
 router.delete('/:reportId', authenticate, reportId, handleInputErrors, ah(ReportController.remove))
 

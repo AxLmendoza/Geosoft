@@ -1,6 +1,6 @@
 import type { ComponentType, SVGProps } from 'react'
 import {
-  BuildingOffice2Icon, ChartBarIcon, HomeIcon, InboxStackIcon, MapIcon, RectangleStackIcon, ShieldCheckIcon,
+  BuildingOffice2Icon, ChartBarIcon, HomeIcon, IdentificationIcon, InboxStackIcon, MapIcon, RectangleStackIcon, ShieldCheckIcon,
   TableCellsIcon, UsersIcon,
 } from '@heroicons/react/24/outline'
 import type { Role } from '@/types'
@@ -22,24 +22,26 @@ const MIS_REPORTES: NavLinkItem = { to: '/reports/mine', label: 'Mis reportes', 
 export function navFor(role?: Role): NavGroup[] {
   switch (role) {
     case 'admin':
+      // Trabajo diario arriba; lo que se usa de vez en cuando, agrupado en "Administración"
       return [
-        { items: [{ to: '/admin', label: 'Resumen', icon: HomeIcon, end: true }, MAPA] },
         {
-          title: 'Reportes',
           items: [
+            { to: '/admin', label: 'Resumen', icon: HomeIcon, end: true },
             { to: '/attention', label: 'Bandeja de atención', icon: InboxStackIcon },
-            { to: '/admin/reports', label: 'Registro de reportes', icon: TableCellsIcon },
+            MAPA,
+            { to: '/admin/staff', label: 'Responsables', icon: IdentificationIcon },
           ],
         },
         {
-          title: 'Supervisión',
+          title: 'Administración',
           items: [
+            { to: '/admin/reports', label: 'Registro de reportes', icon: TableCellsIcon },
+            { to: '/admin/stats', label: 'Estadísticas', icon: ChartBarIcon },
             { to: '/moderation', label: 'Moderación', icon: ShieldCheckIcon },
             { to: '/users', label: 'Usuarios', icon: UsersIcon },
-            { to: '/admin/stats', label: 'Estadísticas', icon: ChartBarIcon },
+            { to: '/admin/areas', label: 'Áreas y categorías', icon: BuildingOffice2Icon },
           ],
         },
-        { title: 'Configuración', items: [{ to: '/admin/areas', label: 'Áreas y categorías', icon: BuildingOffice2Icon }] },
       ]
     case 'moderador':
       return [

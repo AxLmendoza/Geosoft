@@ -9,6 +9,7 @@ import { storage } from '../utils/storage'
 import { serializeReport } from '../utils/serializers'
 import { autoAssign, changeStatus } from '../utils/reportStatus'
 import { buildReportFilters, reportIncludes, serializeMany } from './ReportController'
+import { audit } from '../utils/audit'
 
 /** Campos editables que llegan en el formulario (multipart) */
 const EDITABLE = ['title', 'description', 'categoryId', 'severity', 'lat', 'lng', 'colonia', 'calle', 'anonymous', 'hidden', 'hiddenReason'] as const
@@ -136,7 +137,10 @@ export class AdminReportController {
     }
     const evidence = await ReportHistory.findAll({ where: { reportId: report.id }, attributes: ['imageUrl', 'thumbUrl'] })
     const files = [report.imageUrl, report.thumbUrl, report.mediumUrl, ...evidence.flatMap((h) => [h.imageUrl, h.thumbUrl])]
-    await db.transaction((t) => report.destroy({ force: true, transaction: t }))
+    await db.transaction(async (t) => {
+      await report.destroy({ force: true, transaction: t })
+      await audit(req, { action: 'report.destroyed', targetType: 'report', targetId: report.id, details: { title: report.title } }, t)
+    })
     await storage.remove(files)
     res.json({ message: 'Reporte eliminado definitivamente' })
   }

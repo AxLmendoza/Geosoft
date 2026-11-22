@@ -7,7 +7,8 @@ import { User } from '../models/User'
 import { Blacklist } from '../models/Blacklist'
 import { serializeReport } from '../utils/serializers'
 import { buildReportFilters, reportIncludes, serializeMany } from './ReportController'
-import { changeStatus } from '../utils/reportStatus'
+import { changeStatus, releaseAssignments } from '../utils/reportStatus'
+import { audit } from '../utils/audit'
 import { CLOSED_STATUSES } from '../models/constants'
 
 /** Un moderador solo puede sancionar ciudadanos; el admin a cualquiera menos a otro admin */
@@ -155,6 +156,8 @@ export class ModerationController {
     await db.transaction(async (t) => {
       await target.update({ banned: true, bannedReason: reason, bannedAt: new Date() }, { transaction: t })
       await Blacklist.upsert({ email: target.email, reason, createdById: req.user!.id }, { transaction: t })
+      if (target.role === 'operativo') await releaseAssignments(target.id, req.user!.id, 'el responsable fue suspendido', t)
+      await audit(req, { action: 'user.banned', targetType: 'user', targetId: target.id, details: { reason } }, t)
       if (req.body.hideReports !== false) {
         await Report.update(
           { hidden: true, hiddenReason: `Usuario baneado: ${reason}` },
@@ -178,6 +181,7 @@ export class ModerationController {
     await db.transaction(async (t) => {
       await target.update({ banned: false, bannedReason: null, bannedAt: null }, { transaction: t })
       await Blacklist.destroy({ where: { email: target.email }, transaction: t })
+      await audit(req, { action: 'user.unbanned', targetType: 'user', targetId: target.id }, t)
       await Report.update(
         { hidden: false, hiddenReason: null },
         { where: { userId: target.id, hiddenReason: { [Op.like]: 'Usuario baneado:%' } }, transaction: t },
@@ -209,6 +213,7 @@ export class ModerationController {
     }
     await db.transaction(async (t) => {
       await Blacklist.create({ email, reason: req.body.reason, createdById: req.user!.id }, { transaction: t })
+      await audit(req, { action: 'blacklist.added', targetType: 'blacklist', targetId: target?.id ?? null, details: { email } }, t)
       if (target) await target.update({ banned: true, bannedReason: req.body.reason, bannedAt: new Date() }, { transaction: t })
     })
     res.status(201).json({ message: 'Correo agregado a la lista negra' })
@@ -227,6 +232,7 @@ export class ModerationController {
     }
     await db.transaction(async (t) => {
       await entry.destroy({ transaction: t })
+      await audit(req, { action: 'blacklist.removed', targetType: 'blacklist', targetId: target?.id ?? null, details: { email: entry.email } }, t)
       if (target) await target.update({ banned: false, bannedReason: null, bannedAt: null }, { transaction: t })
     })
     res.json({ message: 'Correo eliminado de la lista negra' })

@@ -12,7 +12,8 @@ const tokenRule = (field: ReturnType<typeof body>) =>
   field.isLength({ min: 6, max: 6 }).withMessage('El código debe tener 6 dígitos').isNumeric().withMessage('Código no válido')
 
 const passwordRules = [
-  body('password').isLength({ min: 8 }).withMessage('El password debe tener al menos 8 caracteres'),
+  // bcrypt solo usa los primeros 72 bytes: un límite evita contraseñas que "funcionan" truncadas
+  body('password').isLength({ min: 8, max: 72 }).withMessage('El password debe tener entre 8 y 72 caracteres'),
   body('password_confirmation').custom((value, { req }) => {
     if (value !== req.body.password) throw new Error('Los passwords no coinciden')
     return true
@@ -68,6 +69,14 @@ router.post(
   handleInputErrors,
   ah(AuthController.resetPassword),
 )
+
+// Invitación del personal: token de un solo uso (32 bytes en base64url)
+const inviteRules = [
+  emailRule(),
+  body('token').isString().isLength({ min: 20, max: 128 }).withMessage('Enlace de invitación no válido').matches(/^[A-Za-z0-9_-]+$/).withMessage('Enlace de invitación no válido'),
+]
+router.post('/invitation/validate', ...inviteRules, handleInputErrors, ah(AuthController.validateInvitation))
+router.post('/invitation/accept', ...inviteRules, ...passwordRules, handleInputErrors, ah(AuthController.acceptInvitation))
 
 router.get('/user', authenticate, ah(AuthController.user))
 

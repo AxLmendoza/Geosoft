@@ -1,4 +1,4 @@
-import type { AreaType, FlagReason, HistoryKind, ReportStatus, Role, Severity } from '@/types'
+import type { AccountStatus, AreaType, FlagReason, HistoryKind, ReportStatus, Role, Severity } from '@/types'
 
 /**
  * Paleta reducida a 4 tonos con significado (en lugar de un color por estado):
@@ -57,6 +57,9 @@ export const CLOSED_STATUSES: ReportStatus[] = ['resuelto', 'cerrado', 'rechazad
 export const OPEN_STATUSES: ReportStatus[] = ['pendiente', 'en_revision', 'asignado', 'en_proceso']
 export const isClosed = (s: ReportStatus) => CLOSED_STATUSES.includes(s)
 
+/** Estados en los que el ciudadano puede confirmar la solución o avisar que el problema continúa (igual que el backend) */
+export const CONFIRMABLE_STATUSES: ReportStatus[] = [...OPEN_STATUSES, 'resuelto']
+
 /** Estados que puede poner el personal operativo (lo valida también el backend) */
 export const OPERATIVO_STATUSES: ReportStatus[] = ['en_proceso', 'resuelto']
 
@@ -100,3 +103,19 @@ export const ROLE: Record<Role, string> = {
 const STATUS_ORDER: ReportStatus[] = [...TRACK_STEPS, ...EXIT_STATUSES]
 export const STATUS_OPTIONS = STATUS_ORDER.map((value) => ({ value, label: STATUS[value].label }))
 export const SEVERITY_OPTIONS = Object.entries(SEVERITY).map(([value, v]) => ({ value: value as Severity, label: v.label }))
+
+/** Estado de una cuenta del personal: texto claro + tono (el icono lo pone AccountStatusBadge) */
+export const ACCOUNT_STATUS: Record<AccountStatus, { label: string; help: string; className: string }> = {
+  activo: { label: 'Activa', help: 'Puede iniciar sesión y atender reportes.', className: 'bg-emerald-50 text-emerald-800 ring-emerald-600/25' },
+  invitacion_pendiente: { label: 'Invitación pendiente', help: 'Aún no crea su contraseña con el enlace del correo.', className: 'bg-amber-50 text-amber-900 ring-amber-600/30' },
+  invitacion_vencida: { label: 'Invitación vencida', help: 'El enlace ya no sirve. Reenvía la invitación.', className: 'bg-orange-50 text-orange-900 ring-orange-600/30' },
+  sin_confirmar: { label: 'Sin confirmar', help: 'No ha confirmado su correo.', className: 'bg-amber-50 text-amber-900 ring-amber-600/30' },
+  desactivado: { label: 'Desactivada', help: 'No puede iniciar sesión. Su historial se conserva.', className: 'bg-slate-100 text-slate-700 ring-slate-500/30' },
+  suspendido: { label: 'Suspendida', help: 'Suspendida por moderación.', className: 'bg-red-50 text-red-800 ring-red-600/25' },
+}
+
+/** Descripción breve de cada rol del personal (formularios) */
+export const STAFF_ROLE_HELP: Record<'operativo' | 'moderador', string> = {
+  operativo: 'Atiende los reportes de un área: cambia su estado, agrega observaciones y evidencias.',
+  moderador: 'Revisa denuncias y contenido publicado. No atiende reportes de un área.',
+}

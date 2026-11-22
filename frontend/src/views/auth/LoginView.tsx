@@ -19,6 +19,7 @@ export default function LoginView() {
   const { mutate, isPending } = useMutation({
     mutationFn: login,
     onError: (error: Error & { code?: string }) => {
+      // INACTIVE / INVITE_PENDING / BANNED traen un mensaje claro del servidor; solo UNCONFIRMED lleva a otra pantalla
       toast.error(error.message)
       if (error.code === 'UNCONFIRMED') navigate('/auth/confirm-account', { state: { email: getValues('email') } })
     },

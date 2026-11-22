@@ -53,15 +53,18 @@ export async function addReportInfo({ id, note, image }: { id: number; note?: st
   } catch (e) { rethrow(e) }
 }
 
-/** Ya quedó / Sigue igual. Votar lo mismo otra vez quita el voto */
-export async function voteReport({ id, value }: { id: number; value: VoteValue }) {
+/**
+ * Confirmación ciudadana: "Confirmar que se resolvió" (solucionado) o "El problema continúa" (sin_solucion).
+ * Solo registra la respuesta; el estado oficial lo decide el personal responsable.
+ */
+export async function confirmReport({ id, value, note }: { id: number; value: VoteValue; note?: string }) {
   try {
-    return (await api.post<VoteSummary>(`/reports/${id}/vote`, { value })).data
+    return (await api.post<{ message: string; votes: VoteSummary }>(`/reports/${id}/confirmation`, { value, note })).data
   } catch (e) { rethrow(e) }
 }
 
-/** El autor: "me dieron seguimiento" (en_proceso) o "ya quedó" (resuelto) */
-export async function updateOwnerStatus({ id, status, note }: { id: number; status: 'en_proceso' | 'resuelto'; note?: string }) {
+/** El autor: "me dieron seguimiento" (en_proceso) */
+export async function updateOwnerStatus({ id, status, note }: { id: number; status: 'en_proceso'; note?: string }) {
   try {
     return (await api.patch<{ message: string }>(`/reports/${id}/status`, { status, note })).data.message
   } catch (e) { rethrow(e) }

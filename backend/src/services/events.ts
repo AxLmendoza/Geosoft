@@ -12,7 +12,7 @@ import type { Transaction } from 'sequelize'
  * para que el flujo de n8n verifique que la petición viene de la API.
  */
 
-export type ReportEventName = 'report.created' | 'report.status_changed' | 'report.assigned' | 'report.updated'
+export type ReportEventName = 'report.created' | 'report.status_changed' | 'report.assigned' | 'report.updated' | 'report.citizen_feedback'
 
 const TIMEOUT_MS = 5000
 

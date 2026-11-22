@@ -13,7 +13,10 @@
     "db:reset": "ts-node src/scripts/db.ts reset",
     "db:demo": "ts-node src/scripts/db.ts demo",
     "db:purge-uploads": "ts-node src/scripts/db.ts purge-uploads",
-    "mail:test": "ts-node src/scripts/mailTest.ts"
+    "mail:test": "ts-node src/scripts/mailTest.ts",
+    "dev:test": "nodemon --watch src --ext ts --exec ts-node src/scripts/devTest.ts",
+    "db:test-users": "ts-node src/scripts/testUsers.ts",
+    "test:iam": "node -r ts-node/register src/tests/iam.test.ts"
   },
   "dependencies": {
     "bcrypt": "^5.1.1",

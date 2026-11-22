@@ -11,10 +11,11 @@ import Pagination from '@/components/ui/Pagination'
 import { StatusBadge } from '@/components/ui/Badges'
 import { EmptyState, ErrorState, ListSkeleton, RefreshingBadge } from '@/components/ui/States'
 import AttentionDialog, { type AttentionMode } from '@/components/reports/AttentionDialog'
+import ActionMenu from '@/components/ui/ActionMenu'
 import type { Report, ReportStatus } from '@/types'
 
 const PAGE_SIZE = 20
-type Show = 'abiertos' | 'sin_area' | 'todos' | ReportStatus
+type Show = 'abiertos' | 'mios' | 'sin_area' | 'revisar' | 'todos' | ReportStatus
 
 export default function AttentionView() {
   const { user, isAdmin, isOperativo } = useAuth()
@@ -34,9 +35,11 @@ export default function AttentionView() {
 
   const params: AttentionFilters = {
     q: q || undefined,
-    status: show !== 'abiertos' && show !== 'sin_area' && show !== 'todos' ? show : undefined,
-    open: show === 'abiertos' || show === 'sin_area' ? 'true' : undefined,
+    status: !['abiertos', 'mios', 'sin_area', 'revisar', 'todos'].includes(show) ? (show as ReportStatus) : undefined,
+    open: show === 'abiertos' || show === 'mios' || show === 'sin_area' ? 'true' : undefined,
+    assignee: show === 'mios' ? 'me' : undefined,
     area: show === 'sin_area' ? 'none' : area || undefined,
+    review: show === 'revisar' ? 'true' : undefined,
     page,
     limit: PAGE_SIZE,
   }
@@ -55,6 +58,8 @@ export default function AttentionView() {
   const showOptions = useMemo(
     () => [
       { value: 'abiertos' as Show, label: withCount('Pendientes de terminar', summary.data?.open) },
+      ...(isOperativo ? [{ value: 'mios' as Show, label: withCount('Asignados a mí', summary.data?.mine) }] : []),
+      { value: 'revisar' as Show, label: withCount('Resueltos con problema reportado', summary.data?.needsReview) },
       ...(isOperativo ? [] : [{ value: 'sin_area' as Show, label: 'Sin área asignada' }]),
       ...OPEN_STATUSES.map((s) => ({ value: s as Show, label: withCount(STATUS[s].label, countFor(s)) })),
       ...STATUS_OPTIONS.filter((o) => !OPEN_STATUSES.includes(o.value)).map((o) => ({ value: o.value as Show, label: o.label })),
@@ -76,8 +81,16 @@ export default function AttentionView() {
         {!isOperativo && <p className="page-subtitle">Clasifica, asigna y da seguimiento a los reportes de todas las áreas.</p>}
         {summary.data && (
           <p className="mt-2 text-sm text-slate-600">
-            <b className="text-slate-900">{summary.data.open}</b> abiertos · <b className="text-slate-900">{countFor('pendiente') + countFor('en_revision')}</b> por atender · <b className="text-slate-900">{countFor('asignado') + countFor('en_proceso')}</b> en atención
+            <b className="text-slate-900">{summary.data.open}</b> abiertos · <b className="text-slate-900">{countFor('pendiente') + countFor('en_revision')}</b> por atender · <b className="text-slate-900">{countFor('asignado') + countFor('en_proceso')}</b> en atención · <b className="text-slate-900">{countFor('resuelto') + countFor('cerrado')}</b> resueltos
           </p>
+        )}
+        {!!summary.data?.needsReview && show !== 'revisar' && (
+          <button onClick={() => setShow('revisar')} className="mt-3 flex w-full items-center justify-between gap-3 rounded-xl bg-amber-50 px-4 py-3 text-left text-sm text-amber-900 ring-1 ring-inset ring-amber-300 hover:bg-amber-100">
+            <span>
+              <b className="font-semibold">{summary.data.needsReview} {summary.data.needsReview === 1 ? 'reporte resuelto' : 'reportes resueltos'}</b> con aviso ciudadano de que el problema continúa.
+            </span>
+            <span className="shrink-0 font-semibold underline">Revisar</span>
+          </button>
         )}
       </header>
 
@@ -101,19 +114,24 @@ export default function AttentionView() {
       ) : list.isError ? (
         <ErrorState message="No pudimos cargar los reportes." onRetry={() => list.refetch()} />
       ) : !list.data?.data.length ? (
-        <EmptyState title="No hay reportes con estos filtros" text={show === 'abiertos' ? 'No hay reportes pendientes de atender.' : undefined} />
+        <EmptyState title="No hay reportes con estos filtros" text={show === 'abiertos' ? 'No hay reportes pendientes de atender.' : show === 'revisar' ? 'Ningún ciudadano ha indicado que un problema resuelto continúe.' : undefined} />
       ) : (
         <ul className={`divide-y divide-line overflow-hidden glass rounded-2xl transition-opacity ${list.isPlaceholderData ? 'opacity-60' : ''}`}>
           {list.data.data.map((r) => (
             <li key={r.id} className="flex flex-col gap-3 p-4 lg:flex-row lg:items-center">
               <Link to={`/reports/${r.id}`} className="flex min-w-0 flex-1 items-start gap-3">
-                <img src={assetUrl(r.thumbUrl)} alt="" loading="lazy" decoding="async" className="size-14 shrink-0 rounded-lg bg-slate-200 object-cover" />
+                <img src={assetUrl(r.thumbUrl)} alt="" loading="lazy" decoding="async" className="size-14 shrink-0 rounded-lg bg-slate-200 object-cover"
+                  // Foto que no carga: queda el recuadro neutro en vez del icono de imagen rota
+                  onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} />
                 <div className="min-w-0 flex-1">
                   <p className="truncate font-semibold text-slate-900 hover:text-brand-700">
                     <span className="font-normal text-slate-400">#{r.id}</span> {r.title}
                   </p>
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     <StatusBadge status={r.status} short />
+                    {r.needsReview && (
+                      <span className="inline-flex items-center rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 ring-1 ring-inset ring-amber-300">El ciudadano indica que continúa</span>
+                    )}
                     {(r.severity === 'critica' || r.severity === 'alta') && (
                       <span className={`text-xs font-semibold ${r.severity === 'critica' ? 'text-red-700' : 'text-orange-700'}`}>Gravedad {SEVERITY[r.severity].label.toLowerCase()}</span>
                     )}
@@ -121,12 +139,29 @@ export default function AttentionView() {
                   <p className="mt-1 text-xs text-slate-500">
                     {[r.category.name, !isOperativo && (r.area?.name ?? 'Sin área'), [r.calle, r.colonia].filter(Boolean).join(', '), `recibido ${timeAgo(r.createdAt)}`].filter(Boolean).join(' · ')}
                   </p>
+                  {r.area && r.area.type !== 'externa' && (
+                    <p className="mt-0.5 text-xs text-slate-600">
+                      {r.assignee
+                        ? r.assignee.id === user?.id ? <b className="font-semibold text-brand-800">Asignado a ti</b> : <>Responsable: <span className="font-medium text-slate-800">{r.assignee.name}</span></>
+                        : 'En la bandeja general del área'}
+                    </p>
+                  )}
                 </div>
               </Link>
               <div className="flex flex-wrap gap-2 lg:shrink-0">
                 <button onClick={() => setAction({ report: r, mode: 'status' })} className="btn-primary btn-compact">Actualizar estado</button>
-                <button onClick={() => setAction({ report: r, mode: 'update' })} className="btn-secondary btn-compact">Agregar evidencia</button>
-                {isAdmin && <button onClick={() => setAction({ report: r, mode: 'assign' })} className="btn-secondary btn-compact">{r.area ? 'Cambiar área' : 'Asignar área'}</button>}
+                {isAdmin ? (
+                  // Admin: la acción frecuente queda visible y las demás en un menú con texto
+                  <ActionMenu
+                    label="Más"
+                    actions={[
+                      { label: r.area ? 'Cambiar área o responsable' : 'Asignar área', onClick: () => setAction({ report: r, mode: 'assign' }) },
+                      { label: 'Agregar observación o evidencia', onClick: () => setAction({ report: r, mode: 'update' }) },
+                    ]}
+                  />
+                ) : (
+                  <button onClick={() => setAction({ report: r, mode: 'update' })} className="btn-secondary btn-compact">Agregar evidencia</button>
+                )}
               </div>
             </li>
           ))}

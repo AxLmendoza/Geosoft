@@ -22,7 +22,21 @@ export type FlagReason = 'informacion_falsa' | 'imagen_inapropiada' | 'spam_basu
 export type FlagStatus = 'pendiente' | 'procedente' | 'descartada'
 export type VoteValue = 'solucionado' | 'sin_solucion'
 
-export type VoteSummary = { solucionado: number; sin_solucion: number; mine: VoteValue | null }
+/**
+ * Confirmación ciudadana ("Confirmar que se resolvió" / "El problema continúa").
+ * Es informativa: nunca cambia el estado oficial.
+ */
+export type VoteSummary = {
+  solucionado: number
+  sin_solucion: number
+  /** Respuesta del usuario actual y cuándo la dio */
+  mine: VoteValue | null
+  mineAt?: string | null
+  /** Respuestas dadas después de que el reporte se marcó como resuelto */
+  afterResolution?: { solucionado: number; sin_solucion: number }
+  /** Respuesta de quien hizo el reporte */
+  owner?: VoteValue | null
+}
 
 export type User = {
   id: number
@@ -34,8 +48,54 @@ export type User = {
   bannedReason: string | null
   bannedAt: string | null
   createdAt: string
+  updatedAt?: string
   reportsCount?: number
   areaId?: number | null
+  /** false = cuenta desactivada por la administración (no puede iniciar sesión) */
+  active?: boolean
+  lastLoginAt?: string | null
+}
+
+/** Estado de una cuenta del personal (lo calcula el backend) */
+export type AccountStatus = 'activo' | 'invitacion_pendiente' | 'invitacion_vencida' | 'sin_confirmar' | 'desactivado' | 'suspendido'
+
+export type StaffMember = {
+  id: number
+  name: string
+  email: string
+  role: Role
+  area: (AreaRef & { active?: boolean }) | null
+  status: AccountStatus
+  active: boolean
+  confirmed: boolean
+  banned: boolean
+  createdAt: string
+  updatedAt: string
+  lastLoginAt: string | null
+  invitedAt: string | null
+  inviteExpiresAt: string | null
+  /** Reportes abiertos asignados directamente a esta persona */
+  openAssigned: number
+  isSelf: boolean
+}
+
+export type StaffDetail = StaffMember & {
+  invitedBy: { id: number; name: string } | null
+  areaOpenReports: number
+  assignedReports: Pick<Report, 'id' | 'title' | 'status' | 'severity' | 'createdAt'>[]
+}
+
+export type InvitationResult = { sent: boolean; reason?: string; warning?: string | null }
+
+export type StaffMeta = {
+  mail: { provider?: 'brevo' | 'smtp'; configured: boolean; missing: string[]; sandbox: boolean; frontendUrl: boolean }
+  inviteTtlHours: number
+  assignableRoles: ('operativo' | 'moderador')[]
+}
+
+export type StaffActivity = {
+  audit: { id: number; action: string; targetType: string; targetId: number | null; details: Record<string, unknown> | null; createdAt: string; actor: { id: number; name: string } | null }[]
+  attention: { id: number; kind: HistoryKind; fromStatus: ReportStatus | null; toStatus: ReportStatus; createdAt: string; report: { id: number; title: string | null } }[]
 }
 
 export type Category = {
@@ -92,7 +152,11 @@ export type Report = {
   canManage: boolean
   area: AreaRef | null
   assignedAt?: string | null
+  /** Responsable directo (solo lo recibe el personal que puede atender el reporte) */
+  assignee?: { id: number; name: string | null; active: boolean } | null
   votes: VoteSummary
+  /** Figura como resuelto pero un ciudadano indicó después que el problema continúa */
+  needsReview?: boolean
   /** Fecha en que se marcó como resuelto */
   resolvedAt: string | null
   /** Cuándo se retira del mapa público (solo si está resuelto) */
@@ -176,5 +240,9 @@ export type AttentionSummary = {
   byStatus: { status: ReportStatus; total: number }[]
   total: number
   open: number
+  /** Resueltos en los que un ciudadano indicó que el problema continúa */
+  needsReview?: number
+  /** Abiertos asignados directamente a quien consulta */
+  mine?: number
   area: AreaRef | null
 }

@@ -13,6 +13,10 @@ export type AttentionFilters = {
   severity?: Severity
   q?: string
   open?: 'true'
+  /** Resueltos en los que un ciudadano indicó que el problema continúa */
+  review?: 'true'
+  /** Responsable directo: yo, nadie (bandeja general) o un ID (solo admin) */
+  assignee?: 'me' | 'none' | number
   page?: number
   limit?: number
 }
@@ -58,9 +62,10 @@ export async function addAttentionUpdate(input: { id: number; note?: string; int
   } catch (e) { rethrow(e) }
 }
 
-export async function assignReport(input: { id: number; areaId: number | null; note?: string }) {
+/** assigneeId: undefined = no cambia el responsable directo; null = lo retira */
+export async function assignReport(input: { id: number; areaId: number | null; assigneeId?: number | null; note?: string }) {
   try {
-    return (await api.patch<Msg>(`/attention/reports/${input.id}/assign`, { areaId: input.areaId, note: input.note })).data.message
+    return (await api.patch<Msg>(`/attention/reports/${input.id}/assign`, { areaId: input.areaId, assigneeId: input.assigneeId, note: input.note })).data.message
   } catch (e) { rethrow(e) }
 }
 

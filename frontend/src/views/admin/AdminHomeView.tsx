@@ -1,7 +1,8 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
-import { getAttentionReports, getAttentionSummary, getStaleReports } from '@/api/AttentionAPI'
+import { getAdminAreas, getAttentionReports, getAttentionSummary, getStaleReports } from '@/api/AttentionAPI'
+import { getStaff } from '@/api/StaffAPI'
 import { useAuth } from '@/hooks/useAuth'
 import { timeAgo } from '@/lib/date'
 import { StatusBadge } from '@/components/ui/Badges'
@@ -22,6 +23,17 @@ export default function AdminHomeView() {
   const unassigned = useQuery({ queryKey: ['attention', 'reports', { area: 'none', open: 'true', limit: 20 }], queryFn: () => getAttentionReports({ area: 'none', open: 'true', limit: 20 }) })
   const critical = useQuery({ queryKey: ['attention', 'reports', { severity: 'critica', open: 'true', limit: 20 }], queryFn: () => getAttentionReports({ severity: 'critica', open: 'true', limit: 20 }) })
   const stale = useQuery({ queryKey: ['attention', 'stale'], queryFn: () => getStaleReports() })
+  const staff = useQuery({ queryKey: ['staff', { role: 'operativo' }], queryFn: () => getStaff({ role: 'operativo' }) })
+  const areas = useQuery({ queryKey: ['admin-areas'], queryFn: getAdminAreas, staleTime: 5 * 60_000 })
+
+  // Equipo: invitaciones sin aceptar y áreas con reportes abiertos que nadie puede atender
+  const team = useMemo(() => {
+    if (!staff.data || !areas.data) return null
+    const active = staff.data.filter((m) => m.status === 'activo')
+    const pending = staff.data.filter((m) => m.status === 'invitacion_pendiente' || m.status === 'invitacion_vencida')
+    const uncovered = areas.data.filter((a) => a.active && a.type !== 'externa' && (a.openReports ?? 0) > 0 && !active.some((m) => m.area?.id === a.id))
+    return { active: active.length, pending: pending.length, uncovered }
+  }, [staff.data, areas.data])
 
   const count = (...statuses: ReportStatus[]) =>
     summary.data?.byStatus.filter((s) => statuses.includes(s.status)).reduce((a, b) => a + b.total, 0) ?? 0
@@ -94,6 +106,34 @@ export default function AdminHomeView() {
               )
             })}
           </Stagger>
+        </section>
+      )}
+
+      {team && (
+        <section aria-labelledby="team-title" className="glass rounded-2xl p-5">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 id="team-title" className="font-display text-lg font-semibold text-slate-900">Equipo responsable</h2>
+              <p className="text-sm text-slate-600">
+                {team.active} {team.active === 1 ? 'persona activa' : 'personas activas'} en las áreas
+                {team.pending > 0 && <>, {team.pending} {team.pending === 1 ? 'invitación sin aceptar' : 'invitaciones sin aceptar'}</>}.
+              </p>
+            </div>
+            <Link to="/admin/staff" className="btn-secondary btn-compact">Ver responsables</Link>
+          </div>
+          {team.uncovered.length > 0 && (
+            <ul className="mt-4 space-y-2">
+              {team.uncovered.map((a) => (
+                <li key={a.id} className="flex gap-2.5 rounded-xl bg-red-50 px-3.5 py-2.5 text-sm text-red-950 ring-1 ring-inset ring-red-200">
+                  <ExclamationTriangleIcon className="mt-0.5 size-4 shrink-0 text-red-600" aria-hidden />
+                  <span>
+                    <b className="font-semibold">{a.name}</b> tiene {a.openReports} {a.openReports === 1 ? 'reporte abierto' : 'reportes abiertos'} y nadie activo para atenderlos.{' '}
+                    <Link to="/admin/staff/new" className="font-semibold underline">Registrar responsable</Link>
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
 

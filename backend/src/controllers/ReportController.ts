@@ -8,9 +8,9 @@ import { ReportFlag } from '../models/ReportFlag'
 import { ReportHistory } from '../models/ReportHistory'
 import { ReportVote } from '../models/ReportVote'
 import { Area } from '../models/Area'
-import { CLOSED_STATUSES } from '../models/constants'
+import { CLOSED_STATUSES, CONFIRMABLE_STATUSES, type VoteValue } from '../models/constants'
 import { storage } from '../utils/storage'
-import { isStaff, serializeReport } from '../utils/serializers'
+import { isStaff, serializeReport, type AssigneeMap } from '../utils/serializers'
 import { getVoteSummaries } from '../utils/votes'
 import { addUpdate, autoAssign, changeStatus, publicVisibilityWhere } from '../utils/reportStatus'
 import { emitReportEvent } from '../services/events'
@@ -60,10 +60,19 @@ export function buildReportFilters(query: Request['query']): Record<string, any>
   return where
 }
 
-/** Serializa una lista agregando los votos de la comunidad */
+/** Nombres de los responsables directos (solo se consultan si quien ve es personal) */
+export async function loadAssignees(reports: Report[], viewer?: User | null): Promise<AssigneeMap> {
+  const staff = !!viewer && viewer.role !== 'ciudadano'
+  const ids = staff ? [...new Set(reports.map((r) => r.assigneeId).filter((id): id is number => !!id))] : []
+  if (!ids.length) return new Map()
+  const users = await User.findAll({ where: { id: ids }, attributes: ['id', 'name', 'active'] })
+  return new Map(users.map((u) => [u.id, { id: u.id, name: u.name, active: u.active }]))
+}
+
+/** Serializa una lista agregando los votos de la comunidad y el responsable directo */
 export async function serializeMany(reports: Report[], viewer?: User | null) {
-  const votes = await getVoteSummaries(reports.map((r) => r.id), viewer)
-  return reports.map((r) => serializeReport(r, viewer, votes.get(r.id)))
+  const [votes, assignees] = await Promise.all([getVoteSummaries(reports.map((r) => r.id), viewer), loadAssignees(reports, viewer)])
+  return reports.map((r) => serializeReport(r, viewer, votes.get(r.id), assignees))
 }
 
 export class ReportController {
@@ -103,9 +112,9 @@ export class ReportController {
       res.status(404).json({ error: 'Reporte no encontrado' })
       return
     }
-    const votes = await getVoteSummaries([report.id], req.user)
+    const [votes, assignees] = await Promise.all([getVoteSummaries([report.id], req.user), loadAssignees([report], req.user)])
     // El serializador filtra el historial según quién consulta (público, autor o personal)
-    res.json(serializeReport(report, req.user, votes.get(report.id)))
+    res.json(serializeReport(report, req.user, votes.get(report.id), assignees))
   }
 
   static async create(req: Request, res: Response) {
@@ -157,8 +166,16 @@ export class ReportController {
     }
   }
 
-  /** El autor marca "le dieron seguimiento" (en_proceso) o "ya quedó" (resuelto) */
+  /**
+   * El autor indica "ya me dieron seguimiento" (en_proceso).
+   * "Ya quedó" (resuelto) ya NO cambia el estado oficial: se registra como confirmación
+   * ciudadana y el personal responsable decide el cierre (ver confirm).
+   */
   static async ownerStatus(req: Request, res: Response) {
+    if (req.body.status === 'resuelto') {
+      req.body.value = 'solucionado'
+      return ReportController.confirm(req, res)
+    }
     const report = await Report.findByPk(req.params.reportId)
     if (!report) {
       res.status(404).json({ error: 'Reporte no encontrado' })
@@ -176,9 +193,8 @@ export class ReportController {
       res.status(400).json({ error: 'El reporte ya tiene ese estado' })
       return
     }
-    const defaultNote = req.body.status === 'resuelto' ? 'El ciudadano confirmó que ya quedó solucionado' : 'El ciudadano indica que ya le dieron seguimiento'
-    await changeStatus(report, req.body.status, req.user!.id, req.body.note || defaultNote)
-    res.json({ message: req.body.status === 'resuelto' ? '¡Marcado como solucionado!' : 'Marcado con seguimiento' })
+    await changeStatus(report, req.body.status, req.user!.id, req.body.note || 'El ciudadano indica que ya le dieron seguimiento')
+    res.json({ message: 'Marcado con seguimiento' })
   }
 
   /** El ciudadano agrega información adicional (texto y/o una foto) a su propio reporte */
@@ -208,31 +224,70 @@ export class ReportController {
     res.status(201).json({ message: 'Información agregada a tu reporte' })
   }
 
-  /** "Clap" de la comunidad. Votar lo mismo otra vez quita el voto */
-  static async vote(req: Request, res: Response) {
+  /**
+   * Confirmación ciudadana: "Confirmar que se resolvió" (solucionado) o "El problema continúa" (sin_solucion).
+   * - Solo registra la respuesta (una por persona, se puede cambiar). NUNCA cambia el estado oficial.
+   * - Se puede responder mientras el reporte está abierto o ya marcado como resuelto.
+   * - La respuesta del autor queda además en su historial de seguimiento.
+   * - "Continúa" sobre un reporte resuelto genera la señal de revisión (needsReview) para
+   *   la administración y el área responsable.
+   */
+  static async confirm(req: Request, res: Response) {
     const report = await Report.findByPk(req.params.reportId)
-    if (!report || report.hidden) {
+    const isOwner = !!report && report.userId === req.user!.id
+    if (!report || (report.hidden && !isOwner)) {
       res.status(404).json({ error: 'Reporte no encontrado' })
       return
     }
-    if (report.userId === req.user!.id) {
-      res.status(400).json({ error: 'Usa las opciones de autor para actualizar tu reporte' })
+    if (req.user!.role === 'admin' || req.user!.role === 'operativo') {
+      res.status(403).json({ error: 'El personal registra la atención desde la bandeja de atención' })
       return
     }
-    if (CLOSED_STATUSES.includes(report.status)) {
-      res.status(400).json({ error: 'El reporte ya está cerrado' })
+    if (!CONFIRMABLE_STATUSES.includes(report.status)) {
+      res.status(400).json({ error: 'El seguimiento de este reporte ya terminó' })
       return
     }
+    const value = req.body.value as VoteValue
+    const note = (req.body.note as string | undefined)?.trim() || null
     const existing = await ReportVote.findOne({ where: { reportId: report.id, userId: req.user!.id } })
-    if (existing && existing.value === req.body.value) {
-      await existing.destroy()
-    } else if (existing) {
-      await existing.update({ value: req.body.value })
-    } else {
-      await ReportVote.create({ reportId: report.id, userId: req.user!.id, value: req.body.value })
-    }
+    const changed = !existing || existing.value !== value
+
+    await db.transaction(async (t) => {
+      if (existing) {
+        // changed('updatedAt') renueva la fecha aunque repita la misma respuesta (cuenta para la resolución vigente)
+        existing.value = value
+        existing.changed('updatedAt', true)
+        await existing.save({ transaction: t })
+      } else {
+        await ReportVote.create({ reportId: report.id, userId: req.user!.id, value }, { transaction: t })
+      }
+      if (isOwner && (changed || note)) {
+        const resolved = report.status === 'resuelto'
+        const text =
+          value === 'solucionado'
+            ? resolved ? 'El ciudadano confirmó que el problema se resolvió' : 'El ciudadano indica que el problema ya se resolvió. El área responsable debe verificarlo.'
+            : resolved ? 'El ciudadano indica que el problema continúa' : 'El ciudadano indica que el problema sigue sin resolverse'
+        await ReportHistory.create(
+          {
+            reportId: report.id,
+            kind: 'ciudadano',
+            fromStatus: report.status,
+            toStatus: report.status,
+            note: note ? `${text}: ${note}` : text,
+            internal: false,
+            changedById: req.user!.id,
+          },
+          { transaction: t },
+        )
+      }
+    })
+    if (changed || note) emitReportEvent('report.citizen_feedback', report.id, { value, owner: isOwner, status: report.status, note: isOwner ? note : null })
+
     const votes = await getVoteSummaries([report.id], req.user)
-    res.json(votes.get(report.id))
+    res.json({
+      message: value === 'solucionado' ? 'Gracias, registramos que el problema se resolvió' : 'Gracias, avisamos al área responsable que el problema continúa',
+      votes: votes.get(report.id),
+    })
   }
 
   /** Borrado lógico por el autor (la foto se conserva para el historial del admin) */

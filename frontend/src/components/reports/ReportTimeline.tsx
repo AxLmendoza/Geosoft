@@ -180,6 +180,8 @@ function entryTitle(h: ReportHistoryItem) {
     return `${verb} ${h.toArea.name}`
   }
   if (h.kind === 'estado') return STATUS[h.toStatus].label
+  // Confirmación ciudadana (se registra como 'ciudadano' con un texto fijo del servidor)
+  if (h.kind === 'ciudadano' && /^El ciudadano (confirmó|indica que el problema)/.test(h.note ?? '')) return 'Respuesta del ciudadano'
   return HISTORY_KIND[h.kind]
 }
 

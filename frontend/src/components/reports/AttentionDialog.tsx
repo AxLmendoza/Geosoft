@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Field, Label, Switch } from '@headlessui/react'
 import { toast } from 'react-toastify'
 import { addAttentionUpdate, assignReport, getPublicAreas, updateAttentionStatus } from '@/api/AttentionAPI'
+import { getStaff } from '@/api/StaffAPI'
 import { useAuth } from '@/hooks/useAuth'
 import { OPERATIVO_STATUSES, STATUS, STATUS_OPTIONS } from '@/lib/labels'
 import Modal from '@/components/ui/Modal'
@@ -15,7 +16,7 @@ export type AttentionMode = 'status' | 'update' | 'assign'
 const TITLES: Record<AttentionMode, string> = {
   status: 'Actualizar estado',
   update: 'Agregar observación o evidencia',
-  assign: 'Asignar área responsable',
+  assign: 'Asignar área y responsable',
 }
 
 /** Invalida solo lo que cambia (no toda la caché, que recargaba el mapa y las estadísticas) */
@@ -36,16 +37,27 @@ export default function AttentionDialog({ report, mode, onClose }: Props) {
   const { user, isAdmin } = useAuth()
   const [status, setStatus] = useState<ReportStatus>('en_proceso')
   const [areaId, setAreaId] = useState(0)
+  const [assigneeId, setAssigneeId] = useState(0)
   const [note, setNote] = useState('')
   const [internal, setInternal] = useState(false)
   const [image, setImage] = useState<File | null>(null)
 
   const { data: areas = [] } = useQuery({ queryKey: ['areas', 'public'], queryFn: getPublicAreas, enabled: mode === 'assign', staleTime: 5 * 60_000 })
+  const selectedArea = areas.find((a) => a.id === areaId)
+  // Personal operativo activo del área elegida (las autoridades externas no tienen personal propio)
+  const staffEnabled = mode === 'assign' && isAdmin && !!areaId && selectedArea?.type !== 'externa'
+  const { data: staff = [], isLoading: staffLoading } = useQuery({
+    queryKey: ['staff', { role: 'operativo', status: 'activo', areaId }],
+    queryFn: () => getStaff({ role: 'operativo', status: 'activo', areaId }),
+    enabled: staffEnabled,
+    staleTime: 60_000,
+  })
 
   useEffect(() => {
     if (!report) return
     setStatus(report.status)
     setAreaId(report.area?.id ?? 0)
+    setAssigneeId(report.assignee?.id ?? 0)
     setNote('')
     setInternal(false)
     setImage(null)
@@ -59,6 +71,13 @@ export default function AttentionDialog({ report, mode, onClose }: Props) {
     () => [{ value: 0, label: 'Sin área (por clasificar)' }, ...areas.map((a) => ({ value: a.id, label: a.type === 'externa' ? `${a.name} — canalizar` : a.name }))],
     [areas],
   )
+
+  const assigneeOptions = useMemo(
+    () => [{ value: 0, label: 'Bandeja general del área (sin responsable directo)' }, ...staff.map((p) => ({ value: p.id, label: `${p.name} (${p.openAssigned} abiertos)` }))],
+    [staff],
+  )
+  const areaChanged = (areaId || null) !== (report?.area?.id ?? null)
+  const assigneeChanged = (assigneeId || null) !== (areaChanged ? null : report?.assignee?.id ?? null)
 
   const done = (msg: string) => {
     toast.success(msg)
@@ -77,16 +96,14 @@ export default function AttentionDialog({ report, mode, onClose }: Props) {
     const text = note.trim() || undefined
     if (mode === 'status') statusM.mutate({ id: report.id, status, note: text, internal, image })
     if (mode === 'update') updateM.mutate({ id: report.id, note: text, internal, image })
-    if (mode === 'assign') assignM.mutate({ id: report.id, areaId: areaId || null, note: text })
+    if (mode === 'assign') assignM.mutate({ id: report.id, areaId: areaId || null, assigneeId: assigneeChanged ? assigneeId || null : undefined, note: text })
   }
 
   const disabled =
     pending ||
     (mode === 'status' && status === report?.status) ||
     (mode === 'update' && !note.trim() && !image) ||
-    (mode === 'assign' && (areaId || null) === (report?.area?.id ?? null))
-
-  const selectedArea = areas.find((a) => a.id === areaId)
+    (mode === 'assign' && !areaChanged && !assigneeChanged)
 
   return (
     <Modal open={!!report} onClose={onClose} title={TITLES[mode]}>
@@ -105,9 +122,21 @@ export default function AttentionDialog({ report, mode, onClose }: Props) {
           )}
           {mode === 'assign' && (
             <>
-              <SelectBox label="Área o dependencia" value={areaId} onChange={setAreaId} options={areaOptions} />
+              <SelectBox label="Área o dependencia" value={areaId} onChange={(v) => { setAreaId(v); setAssigneeId(0) }} options={areaOptions} />
               {selectedArea?.type === 'externa' && (
                 <p className="-mt-2 rounded-lg bg-cyan-50 p-2 text-xs text-cyan-800">Es otra autoridad: el reporte quedará como "Canalizado a otra autoridad".</p>
+              )}
+              {staffEnabled && (
+                <div>
+                  <SelectBox label="Responsable directo (opcional)" value={assigneeId} onChange={setAssigneeId} options={assigneeOptions} />
+                  <p className="mt-1.5 text-xs text-slate-500">
+                    {staffLoading
+                      ? 'Cargando personal del área…'
+                      : staff.length === 0
+                        ? 'Esta área no tiene personal operativo activo. Regístralo en Responsables.'
+                        : 'Todo el personal del área ve el reporte; el responsable directo es quien lo atiende.'}
+                  </p>
+                </div>
               )}
             </>
           )}

@@ -1,6 +1,6 @@
 import { memo } from 'react'
 import { Link } from 'react-router-dom'
-import { BuildingOffice2Icon, ClockIcon, HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
+import { BuildingOffice2Icon, ClockIcon } from '@heroicons/react/24/outline'
 import { cardImage } from '@/lib/media'
 import { timeAgo } from '@/lib/date'
 import { SeverityBadge, StatusBadge } from '@/components/ui/Badges'
@@ -60,18 +60,15 @@ function ReportCard({ report, showProgress = false }: { report: Report; showProg
             </p>
           </div>
         )}
-        {!showProgress && (
-          <div className="mt-auto flex items-center gap-3 border-t border-line pt-3 text-xs font-semibold text-slate-500">
-            <span title="Vecinos que dicen que ya quedó" className="flex items-center gap-1">
-              <HandThumbUpIcon className="size-4" aria-hidden /> <span className="tabular-nums">{report.votes.solucionado}</span>
-              <span className="sr-only">dicen que ya quedó</span>
-            </span>
-            <span title="Vecinos que dicen que sigue igual" className="flex items-center gap-1">
-              <HandThumbDownIcon className="size-4" aria-hidden /> <span className="tabular-nums">{report.votes.sin_solucion}</span>
-              <span className="sr-only">dicen que sigue igual</span>
-            </span>
+        {!showProgress && (report.needsReview || report.status === 'resuelto') && (
+          <div className="mt-auto flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-line pt-3 text-xs font-semibold">
+            {report.needsReview ? (
+              <span className="text-amber-800">Un ciudadano indica que el problema continúa</span>
+            ) : (report.votes.afterResolution?.solucionado ?? 0) > 0 ? (
+              <span className="text-emerald-700">Solución confirmada por ciudadanos</span>
+            ) : null}
             {report.status === 'resuelto' && report.removalAt && (
-              <span className="ml-auto text-emerald-700">Se retira {timeAgo(report.removalAt)}</span>
+              <span className="ml-auto font-normal text-slate-500">Se retira del mapa {timeAgo(report.removalAt)}</span>
             )}
           </div>
         )}

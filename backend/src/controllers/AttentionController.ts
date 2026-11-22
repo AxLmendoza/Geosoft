@@ -5,8 +5,12 @@ import { Area } from '../models/Area'
 import { CLOSED_STATUSES, OPEN_STATUSES, OPERATIVO_STATUSES, type ReportStatus } from '../models/constants'
 import { storage } from '../utils/storage'
 import { canManageReport, isAdmin, isOperativo } from '../utils/permissions'
-import { addUpdate, assignArea, changeStatus } from '../utils/reportStatus'
+import { addUpdate, assignArea, changeStatus, setAssignee } from '../utils/reportStatus'
+import { User } from '../models/User'
+import { db } from '../config/db'
+import { audit } from '../utils/audit'
 import { buildReportFilters, reportIncludes, serializeMany } from './ReportController'
+import { hasNeedsReview, needsReviewWhere } from '../utils/votes'
 
 /**
  * Bandeja de atención: personal operativo (solo su área), moderación y administración.
@@ -34,7 +38,10 @@ async function loadManageable(req: Request, res: Response) {
 }
 
 export class AttentionController {
-  /** ?status=&area=&category=&severity=&q=&open=true&page=1&limit=20 → { data, total, page, pages } */
+  /**
+   * ?status=&area=&category=&severity=&q=&open=true&review=true&page=1&limit=20 → { data, total, page, pages }
+   * review=true: resueltos en los que un ciudadano indicó que el problema continúa
+   */
   static async list(req: Request, res: Response) {
     const where = scopeWhere(req)
     const limit = Math.min(Number(req.query.limit ?? 20), 100)
@@ -44,6 +51,11 @@ export class AttentionController {
       return
     }
     if (req.query.open === 'true' && !req.query.status) where.status = OPEN_STATUSES
+    // Responsable directo: "me" (yo), "none" (bandeja general del área) o un ID (solo admin)
+    if (req.query.assignee === 'me') where.assigneeId = req.user!.id
+    else if (req.query.assignee === 'none') where.assigneeId = null
+    else if (req.query.assignee && isAdmin(req.user)) where.assigneeId = Number(req.query.assignee)
+    if (req.query.review === 'true') where[Op.and as any] = [needsReviewWhere()]
     if (req.query.q) {
       const q = `%${req.query.q}%`
       const asNumber = Number(String(req.query.q).replace('#', ''))
@@ -86,8 +98,15 @@ export class AttentionController {
     })) as unknown as { status: ReportStatus; total: string }[]
     const byStatus = rows.map((r) => ({ status: r.status, total: Number(r.total) }))
     const area = req.user!.areaId ? await Area.findByPk(req.user!.areaId, { attributes: ['id', 'name', 'type'] }) : null
+    const [needsReview, mine] = await Promise.all([
+      Report.count({ where: { ...where, [Op.and]: [needsReviewWhere()] } }),
+      Report.count({ where: { ...where, assigneeId: req.user!.id, status: OPEN_STATUSES } }),
+    ])
     res.json({
       byStatus,
+      needsReview,
+      /** Abiertos asignados directamente a quien consulta */
+      mine,
       total: byStatus.reduce((a, b) => a + b.total, 0),
       open: byStatus.filter((s) => OPEN_STATUSES.includes(s.status)).reduce((a, b) => a + b.total, 0),
       area,
@@ -109,7 +128,9 @@ export class AttentionController {
         res.status(403).json({ error: 'Tu rol solo puede marcar reportes como "en atención" o "resueltos"' })
         return
       }
-      if (CLOSED_STATUSES.includes(report.status)) {
+      // Excepción: puede reabrir (resuelto → en atención) si un ciudadano indicó que el problema continúa
+      const reopen = report.status === 'resuelto' && status === 'en_proceso' && (await hasNeedsReview(report))
+      if (CLOSED_STATUSES.includes(report.status) && !reopen) {
         res.status(400).json({ error: 'El reporte ya está cerrado' })
         return
       }
@@ -143,7 +164,11 @@ export class AttentionController {
     res.status(201).json({ message: evidence ? 'Evidencia agregada' : 'Observación agregada' })
   }
 
-  /** Asignar / reasignar / canalizar (solo administración) */
+  /**
+   * Asignar / reasignar / canalizar (solo administración).
+   * body: { areaId: number|null, assigneeId?: number|null, note? }
+   * assigneeId (opcional) = responsable directo; debe ser personal operativo activo del área final.
+   */
   static async assign(req: Request, res: Response) {
     if (!isAdmin(req.user)) {
       res.status(403).json({ error: 'Solo la administración puede asignar reportes' })
@@ -160,12 +185,38 @@ export class AttentionController {
       res.status(400).json({ error: 'Área no válida o inactiva' })
       return
     }
-    if ((area?.id ?? null) === report.areaId) {
-      res.status(400).json({ error: 'El reporte ya está asignado a esa área' })
+    const areaChanges = (area?.id ?? null) !== report.areaId
+    const finalAreaId = area?.id ?? null
+
+    // Responsable directo (undefined = no se toca)
+    const wantsAssignee = req.body.assigneeId !== undefined
+    const assigneeId = req.body.assigneeId === null || req.body.assigneeId === undefined ? null : Number(req.body.assigneeId)
+    let assignee: User | null = null
+    if (assigneeId !== null) {
+      assignee = await User.findByPk(assigneeId)
+      const valid = !!assignee && assignee.role === 'operativo' && assignee.active && assignee.confirmed && !assignee.banned
+      if (!valid || assignee!.areaId !== finalAreaId || area?.type === 'externa') {
+        res.status(400).json({ error: 'El responsable debe ser personal operativo activo del área asignada' })
+        return
+      }
+    }
+    // Al cambiar de área el responsable anterior se retira solo (assignArea)
+    const assigneeChanges = wantsAssignee && assigneeId !== (areaChanges ? null : report.assigneeId)
+
+    if (!areaChanges && !assigneeChanges) {
+      res.status(400).json({ error: wantsAssignee ? 'El reporte ya tiene esa asignación' : 'El reporte ya está asignado a esa área' })
       return
     }
-    await assignArea(report, area, req.user!.id, req.body.note)
-    res.json({ message: area ? (area.type === 'externa' ? `Canalizado a ${area.name}` : `Asignado a ${area.name}`) : 'Asignación retirada' })
+    await db.transaction(async (t) => {
+      if (areaChanges) await assignArea(report, area, req.user!.id, req.body.note, t)
+      if (assigneeChanges) await setAssignee(report, assignee ? { id: assignee.id, name: assignee.name } : null, req.user!.id, areaChanges ? null : req.body.note, t)
+      await audit(req, { action: 'report.assigned', targetType: 'report', targetId: report.id, details: { areaId: finalAreaId, assigneeId: assignee?.id ?? null } }, t)
+    })
+    const parts = [
+      areaChanges ? (area ? (area.type === 'externa' ? `Canalizado a ${area.name}` : `Asignado a ${area.name}`) : 'Asignación de área retirada') : null,
+      assigneeChanges ? (assignee ? `Responsable: ${assignee.name}` : 'Sin responsable directo') : null,
+    ].filter(Boolean)
+    res.json({ message: parts.join('. ') })
   }
 
   /**
@@ -173,7 +224,12 @@ export class AttentionController {
    * Lo usa el panel y también n8n (vía /api/integrations con API key).
    */
   static async stale(req: Request, res: Response) {
-    res.json(await findStaleReports(staleDays(req.query.days), req.user?.role === 'operativo' ? req.user.areaId : undefined))
+    // Operativo sin área: no ve nada (antes recibía los reportes SIN área de todo el municipio)
+    if (req.user!.role === 'operativo' && !isOperativo(req.user)) {
+      res.json({ days: staleDays(req.query.days), total: 0, reports: [] })
+      return
+    }
+    res.json(await findStaleReports(staleDays(req.query.days), req.user!.role === 'operativo' ? req.user!.areaId : undefined))
   }
 }
 

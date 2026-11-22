@@ -5,6 +5,7 @@ import { Category } from '../models/Category'
 import { Report } from '../models/Report'
 import { User } from '../models/User'
 import { OPEN_STATUSES } from '../models/constants'
+import { audit } from '../utils/audit'
 
 /** "Obras Públicas y Mantenimiento" → "obras-publicas-y-mantenimiento" */
 export const slugify = (text: string) =>
@@ -45,7 +46,8 @@ export class AreaController {
   static async list(_req: Request, res: Response) {
     const [areas, members, categories, open] = await Promise.all([
       Area.findAll({ order: [['active', 'DESC'], ['name', 'ASC']] }),
-      countBy(User, { role: 'operativo' }),
+      // Solo personal que puede atender hoy (activo, confirmado y no suspendido)
+      countBy(User, { role: 'operativo', active: true, confirmed: true, banned: false }),
       countBy(Category),
       countBy(Report, { status: OPEN_STATUSES }),
     ])
@@ -67,6 +69,7 @@ export class AreaController {
       description: req.body.description || null,
       contactEmail: req.body.contactEmail || null,
     })
+    await audit(req, { action: 'area.created', targetType: 'area', targetId: area.id, details: { name: area.name, type: area.type } })
     res.status(201).json(area)
   }
 
@@ -82,6 +85,7 @@ export class AreaController {
       if (req.body[key] !== undefined) data[key] = req.body[key] === '' ? null : req.body[key]
     }
     await area.update(data)
+    await audit(req, { action: 'area.updated', targetType: 'area', targetId: area.id, details: data })
     res.json(area)
   }
 
@@ -102,6 +106,7 @@ export class AreaController {
       description: req.body.description || null,
       areaId: req.body.areaId || null,
     })
+    await audit(req, { action: 'category.created', targetType: 'category', targetId: category.id, details: { name: category.name, areaId: category.areaId } })
     res.status(201).json(category)
   }
 
@@ -122,6 +127,7 @@ export class AreaController {
     }
     if (req.body.areaId !== undefined) data.areaId = req.body.areaId || null
     await category.update(data)
+    await audit(req, { action: 'category.updated', targetType: 'category', targetId: category.id, details: data })
     res.json(category)
   }
 }

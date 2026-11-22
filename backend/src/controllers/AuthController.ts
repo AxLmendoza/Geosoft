@@ -4,8 +4,31 @@ import { Blacklist } from '../models/Blacklist'
 import { AuthEmail } from '../emails/AuthEmail'
 import { checkPassword, generateJWT, generateToken, hashPassword, isTokenExpired } from '../utils/auth'
 import { clearFailures, registerFailure } from '../utils/codeAttempts'
+import { inviteMatches } from '../utils/invitations'
+import { audit } from '../utils/audit'
 
 const INVALID_CODE = 'Código no válido o expirado'
+const INVALID_INVITE = 'El enlace de invitación no es válido o ya venció. Pide a la administración que te envíe uno nuevo.'
+const INVITE_PENDING = 'Tu cuenta del personal se activa con el enlace de invitación que te llegó por correo.'
+
+/** Cuenta del personal creada por un administrador que aún no acepta su invitación */
+const hasPendingInvite = (u: User) => !u.confirmed && !!u.invitedAt
+
+/**
+ * Invitación vigente para ese correo y token. Los fallos cuentan para el mismo límite
+ * que los códigos: tras varios intentos el enlace se invalida.
+ */
+async function findByInvite(emailInput: string, token: string) {
+  const email = String(emailInput).toLowerCase()
+  const user = await User.scope('withSecrets').findOne({ where: { email } })
+  const valid =
+    !!user && user.active && !user.confirmed && inviteMatches(String(token), user.inviteTokenHash) && !isTokenExpired(user.inviteExpiresAt)
+  if (valid) return user
+  if (user?.inviteTokenHash && registerFailure(`invite:${email}`)) {
+    await user.update({ inviteTokenHash: null, inviteExpiresAt: null })
+  }
+  return null
+}
 
 /**
  * Busca al usuario por CORREO + código vigente.
@@ -57,7 +80,7 @@ export class AuthController {
 
   static async confirmAccount(req: Request, res: Response) {
     const user = await findByValidToken(req.body.email, req.body.token)
-    if (!user || user.confirmed) {
+    if (!user || user.confirmed || hasPendingInvite(user)) {
       res.status(401).json({ error: INVALID_CODE })
       return
     }
@@ -74,6 +97,10 @@ export class AuthController {
     }
     if (user.confirmed) {
       res.status(409).json({ error: 'La cuenta ya está confirmada' })
+      return
+    }
+    if (hasPendingInvite(user)) {
+      res.status(409).json({ error: INVITE_PENDING, code: 'INVITE_PENDING' })
       return
     }
     const { token, tokenExpiresAt } = generateToken()
@@ -93,8 +120,17 @@ export class AuthController {
       res.status(401).json({ error: 'Correo o password incorrectos' })
       return
     }
+    // Se revisa después del password para no revelar el estado de cuentas ajenas
+    if (user.active === false) {
+      res.status(403).json({ error: 'Tu cuenta está desactivada. Contacta a la administración.', code: 'INACTIVE' })
+      return
+    }
     if (user.banned || (await Blacklist.findOne({ where: { email } }))) {
       res.status(403).json({ error: 'Tu cuenta fue suspendida por moderación', code: 'BANNED' })
+      return
+    }
+    if (hasPendingInvite(user)) {
+      res.status(403).json({ error: INVITE_PENDING, code: 'INVITE_PENDING' })
       return
     }
     if (!user.confirmed) {
@@ -110,7 +146,39 @@ export class AuthController {
       })
       return
     }
+    // silent: el acceso no cuenta como "modificación" del usuario (updatedAt lo ve el administrador)
+    await user.update({ lastLoginAt: new Date() }, { silent: true })
     res.json({ token: generateJWT(user.id) })
+  }
+
+  /** Comprueba el enlace antes de mostrar el formulario (no lo consume) */
+  static async validateInvitation(req: Request, res: Response) {
+    const user = await findByInvite(req.body.email, req.body.token)
+    if (!user) {
+      res.status(401).json({ error: INVALID_INVITE, code: 'INVALID_INVITE' })
+      return
+    }
+    res.json({ name: user.name })
+  }
+
+  /** El personal invitado crea su contraseña: confirma la cuenta y el enlace deja de servir */
+  static async acceptInvitation(req: Request, res: Response) {
+    const user = await findByInvite(req.body.email, req.body.token)
+    if (!user) {
+      res.status(401).json({ error: INVALID_INVITE, code: 'INVALID_INVITE' })
+      return
+    }
+    clearFailures(`invite:${user.email}`)
+    await user.update({
+      password: await hashPassword(req.body.password),
+      confirmed: true, // llegó por el correo: el correo es suyo
+      inviteTokenHash: null,
+      inviteExpiresAt: null,
+      token: null,
+      tokenExpiresAt: null,
+    })
+    await audit({ user, ip: req.ip }, { action: 'invitation.accepted', targetType: 'user', targetId: user.id })
+    res.json({ message: 'Tu cuenta está activa. Ya puedes iniciar sesión.' })
   }
 
   static async forgotPassword(req: Request, res: Response) {
@@ -148,6 +216,9 @@ export class AuthController {
       token: null,
       tokenExpiresAt: null,
       confirmed: true, // si llegó al correo, el correo es suyo
+      // Si tenía una invitación pendiente, ya no hace falta
+      inviteTokenHash: null,
+      inviteExpiresAt: null,
     })
     res.json({ message: 'Password actualizado, ya puedes iniciar sesión' })
   }

@@ -113,6 +113,16 @@ export class Report extends Model {
   @Column(DataType.INTEGER)
   declare assignedById: number | null
 
+  /**
+   * Responsable directo (personal operativo del área). Opcional: si es null el reporte
+   * está en la bandeja general del área. NO cambia quién puede verlo: el acceso sigue
+   * siendo por área. Sin asociación de Sequelize a propósito (Report ya pertenece a User
+   * por userId y una segunda asociación obligaría a usar alias en todas las consultas);
+   * el nombre se carga aparte en el serializador.
+   */
+  @Column(DataType.INTEGER)
+  declare assigneeId: number | null
+
   @HasMany(() => ReportFlag, { onDelete: 'CASCADE', hooks: true })
   declare flags: ReportFlag[]
 

@@ -15,7 +15,7 @@ import { StatusBadge } from '@/components/ui/Badges'
 import { ErrorState, Skeleton } from '@/components/ui/States'
 import ImageViewer from '@/components/ui/ImageViewer'
 import FlagDialog from '@/components/reports/FlagDialog'
-import CommunityVotes from '@/components/reports/CommunityVotes'
+import CitizenConfirmation, { CitizenFeedbackSummary, NeedsReviewAlert } from '@/components/reports/CitizenConfirmation'
 import OwnerStatusActions from '@/components/reports/OwnerStatusActions'
 import ResolvedNotice from '@/components/reports/ResolvedNotice'
 import ReportTimeline from '@/components/reports/ReportTimeline'
@@ -105,6 +105,7 @@ export default function ReportDetailView() {
       {report.deletedAt && (
         <p className="rounded-lg bg-red-50 p-3 text-sm text-red-800 ring-1 ring-red-200">Reporte eliminado (borrado lógico). Solo la administración lo ve.</p>
       )}
+      {(report.canManage || report.isOwner) && <NeedsReviewAlert report={report} />}
       {report.hidden && (
         <p className="rounded-lg bg-amber-50 p-3 text-sm text-amber-800 ring-1 ring-amber-200">
           Oculto al público{report.hiddenReason ? `: ${report.hiddenReason}` : ''}.
@@ -137,6 +138,9 @@ export default function ReportDetailView() {
             </section>
           )}
 
+          {/* Autor y vecinos: confirman el resultado sin cambiar el estado oficial */}
+          <CitizenConfirmation report={report} />
+
           <ReportTimeline report={report} />
         </div>
 
@@ -162,13 +166,11 @@ export default function ReportDetailView() {
             </dl>
           </section>
 
-          {/* La opinión vecinal es para la comunidad, no para quien atiende o hizo el reporte */}
-          {!report.isOwner && !report.canManage && !closed && (
-            <section className="card"><CommunityVotes report={report} /></section>
-          )}
+          {/* Para el personal: qué respondieron los ciudadanos */}
+          <CitizenFeedbackSummary report={report} />
 
           <section className="relative h-56 overflow-hidden rounded-xl border border-line" aria-label="Ubicación en el mapa">
-            <BaseMap center={report} zoom={16} showOverlay={false}>
+            <BaseMap center={report} zoom={16} showOverlay={false} initialPitch={0} simplified>
               <Marker longitude={report.lng} latitude={report.lat} anchor="bottom">
                 <ReportPin report={report} />
               </Marker>

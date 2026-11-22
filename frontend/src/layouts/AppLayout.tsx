@@ -129,6 +129,7 @@ const SHORT: Record<string, string> = {
   '/attention': 'Bandeja',
   '/reports/mine': 'Mis reportes',
   '/moderation': 'Moderación',
+  '/admin/staff': 'Equipo',
 }
 
 export default function AppLayout() {
@@ -218,7 +219,8 @@ export default function AppLayout() {
       {/* ---------- Celular: barra inferior con etiquetas ---------- */}
       <nav
         className="fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-line bg-white/90 px-2 pt-1 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur-xl md:hidden"
-        style={{ paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
+        // Altura fija = la misma que libra el mapa (bottom de <main>): sin rendijas con ningún rol
+        style={{ height: 'calc(4.25rem + env(safe-area-inset-bottom))', paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
         aria-label="Navegación principal"
       >
         {primary.slice(0, 1).map((i) => <TabLink key={i.to} to={i.to} end={i.end} icon={i.icon} label={short(i.to) ?? i.label} />)}

@@ -18,7 +18,10 @@ const app = express()
 // Render (y casi cualquier hosting) pone un proxy delante: necesario para el rate limiter
 app.set('trust proxy', 1)
 
-const origins = (process.env.FRONTEND_URL ?? 'http://localhost:5173').split(',').map((o) => o.trim())
+const origins: (string | RegExp)[] = (process.env.FRONTEND_URL ?? 'http://localhost:5173').split(',').map((o) => o.trim())
+// En desarrollo Vite puede tomar otro puerto (5174, 5175…) si el 5173 está ocupado: se acepta cualquier puerto local.
+// En producción solo se aceptan los orígenes de FRONTEND_URL.
+if (process.env.NODE_ENV !== 'production') origins.push(/^http:\/\/(localhost|127\.0\.0\.1):\d+$/)
 app.use(cors({ origin: origins, exposedHeaders: ['X-Total-Count'] }))
 app.use(morgan(process.env.NODE_ENV === 'production' ? 'combined' : 'dev'))
 app.use(express.json({ limit: '1mb' }))

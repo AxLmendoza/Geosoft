@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { HandThumbDownIcon, HandThumbUpIcon } from '@heroicons/react/24/outline'
 import { deleteReportAsModerator, getModerationReports, restoreReport, setReportVisibility, updateReportStatus } from '@/api/ModerationAPI'
 import { useAuth } from '@/hooks/useAuth'
 import { STATUS_OPTIONS, isClosed } from '@/lib/labels'
@@ -53,7 +52,7 @@ export default function ReportsPanel() {
           className="w-64"
           options={[
             { value: '' as const, label: 'Todos (visibles y ocultos)' },
-            { value: 'comunidad' as const, label: 'La comunidad dice que ya quedó' },
+            { value: 'comunidad' as const, label: 'Ciudadanos confirman la solución' },
             { value: 'visibles' as const, label: 'Solo visibles' },
             { value: 'ocultos' as const, label: 'Solo ocultos' },
             { value: 'eliminados' as const, label: 'Eliminados (borrado lógico)' },
@@ -78,9 +77,12 @@ export default function ReportsPanel() {
                   {pendingFlags > 0 && <span className="rounded bg-red-100 px-1.5 font-bold text-red-700">{pendingFlags} denuncias</span>}
                   {r.hidden && <span className="rounded bg-slate-800 px-1.5 font-bold text-white">Oculto</span>}
                   {r.deletedAt && <span className="rounded bg-red-600 px-1.5 font-bold text-white">Eliminado</span>}
-                  <span title="La comunidad dice que ya quedó / sigue igual" className="flex items-center gap-1">
-                    <HandThumbUpIcon className="size-3.5" /> {r.votes.solucionado} · <HandThumbDownIcon className="size-3.5" /> {r.votes.sin_solucion}
-                  </span>
+                  {r.votes.solucionado + r.votes.sin_solucion > 0 && (
+                    <span title="Confirmación ciudadana (no cambia el estado)">
+                      · {r.votes.solucionado} confirman solución · {r.votes.sin_solucion} indican que continúa
+                    </span>
+                  )}
+                  {r.needsReview && <span className="rounded bg-amber-100 px-1.5 font-bold text-amber-900">Requiere revisión</span>}
                   <span>· {formatRelativeDay(r.createdAt)}</span>
                 </div>
                 <p className="mt-0.5 truncate text-xs text-slate-500">
@@ -101,9 +103,9 @@ export default function ReportsPanel() {
                     <ActionMenu
                       actions={[
                         {
-                          label: `Marcar solucionado (${r.votes.solucionado} vecinos)`,
+                          label: `Marcar resuelto (${r.votes.solucionado} ciudadanos lo confirman)`,
                           hidden: isClosed(r.status) || r.votes.solucionado === 0,
-                          onClick: () => resolve.mutate({ id: r.id, status: 'resuelto', note: `Confirmado por moderación (${r.votes.solucionado} vecinos dijeron que ya quedó)` }),
+                          onClick: () => resolve.mutate({ id: r.id, status: 'resuelto', note: `Confirmado por moderación (${r.votes.solucionado} ciudadanos confirmaron la solución)` }),
                         },
                         { label: 'Cambiar estado', onClick: () => setStatusTarget(r) },
                         { label: 'Suspender al autor', hidden: !r.author || !!r.author.banned, danger: true, onClick: () => setBanTarget(r.author!) },

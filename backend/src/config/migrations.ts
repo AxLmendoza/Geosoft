@@ -35,6 +35,15 @@ const COLUMNS = [
   `ALTER TABLE "report_history" ADD COLUMN IF NOT EXISTS "toAreaId" INTEGER REFERENCES "areas"("id") ON DELETE SET NULL ON UPDATE CASCADE`,
   // Ampliar un VARCHAR no pierde datos
   `ALTER TABLE "report_history" ALTER COLUMN "note" TYPE VARCHAR(600)`,
+  // Gestión de personal (IAM interno). "active" nace en true: las cuentas existentes siguen igual
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "active" BOOLEAN NOT NULL DEFAULT true`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "lastLoginAt" TIMESTAMP WITH TIME ZONE`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "inviteTokenHash" VARCHAR(64)`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "inviteExpiresAt" TIMESTAMP WITH TIME ZONE`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "invitedAt" TIMESTAMP WITH TIME ZONE`,
+  `ALTER TABLE "users" ADD COLUMN IF NOT EXISTS "invitedById" INTEGER REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE`,
+  // Responsable directo de un reporte (opcional)
+  `ALTER TABLE "reports" ADD COLUMN IF NOT EXISTS "assigneeId" INTEGER REFERENCES "users"("id") ON DELETE SET NULL ON UPDATE CASCADE`,
 ]
 
 /**
@@ -51,6 +60,10 @@ const INDEXES = [
   `CREATE INDEX IF NOT EXISTS "report_history_report_id" ON "report_history" ("reportId", "createdAt")`,
   `CREATE INDEX IF NOT EXISTS "report_flags_report_id" ON "report_flags" ("reportId", "status")`,
   `CREATE INDEX IF NOT EXISTS "users_area_id" ON "users" ("areaId")`,
+  `CREATE INDEX IF NOT EXISTS "users_role_active" ON "users" ("role", "active")`,
+  `CREATE INDEX IF NOT EXISTS "reports_assignee_status" ON "reports" ("assigneeId", "status")`,
+  `CREATE INDEX IF NOT EXISTS "audit_logs_target" ON "audit_logs" ("targetType", "targetId", "createdAt" DESC)`,
+  `CREATE INDEX IF NOT EXISTS "audit_logs_actor" ON "audit_logs" ("actorId", "createdAt" DESC)`,
 ]
 
 async function typeExists(db: Sequelize, name: string) {

@@ -18,12 +18,20 @@ async function userFromHeader(req: Request) {
   return User.findByPk(id)
 }
 
-/** Requiere sesión válida, cuenta confirmada y usuario no baneado */
+/**
+ * Requiere sesión válida, cuenta activa, confirmada y no baneada.
+ * El usuario se lee de la BD en cada petición: desactivar una cuenta o cambiar su rol
+ * surte efecto de inmediato aunque su JWT siga vigente.
+ */
 export async function authenticate(req: Request, res: Response, next: NextFunction) {
   try {
     const user = await userFromHeader(req)
     if (!user) {
       res.status(401).json({ error: 'No autenticado' })
+      return
+    }
+    if (user.active === false) {
+      res.status(403).json({ error: 'Tu cuenta está desactivada. Contacta a la administración.', code: 'INACTIVE' })
       return
     }
     if (!user.confirmed) {
@@ -45,7 +53,7 @@ export async function authenticate(req: Request, res: Response, next: NextFuncti
 export async function optionalAuth(req: Request, _res: Response, next: NextFunction) {
   try {
     const user = await userFromHeader(req)
-    if (user && user.confirmed && !user.banned) req.user = user
+    if (user && user.active !== false && user.confirmed && !user.banned) req.user = user
   } catch {
     /* token inválido: se trata como visitante */
   }

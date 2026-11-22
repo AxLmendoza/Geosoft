@@ -4,7 +4,7 @@ import { Report } from '../models/Report'
 import { ReportHistory } from '../models/ReportHistory'
 import { Area } from '../models/Area'
 import type { Category } from '../models/Category'
-import type { HistoryKind, ReportStatus } from '../models/constants'
+import { OPEN_STATUSES, type HistoryKind, type ReportStatus } from '../models/constants'
 import { emitReportEvent } from '../services/events'
 
 /** Días que un reporte resuelto/cerrado sigue visible en el mapa público */
@@ -100,6 +100,9 @@ export async function assignArea(
       : `Asignado a ${area.name}`
     : 'Se retiró la asignación de área'
 
+  // El responsable directo pertenece al área anterior: al cambiar de área vuelve a la bandeja general
+  const areaChanged = (area?.id ?? null) !== fromAreaId
+
   await inTx(transaction, async (t) => {
     await ReportHistory.create(
       {
@@ -121,11 +124,59 @@ export async function assignArea(
         assignedById: actorId,
         status: toStatus,
         resolvedAt: toStatus === fromStatus ? report.resolvedAt : nextResolvedAt(report, toStatus),
+        ...(areaChanged ? { assigneeId: null } : {}),
       },
       { transaction: t },
     )
   })
   emitReportEvent('report.assigned', report.id, { fromAreaId, toAreaId: area?.id ?? null, fromStatus, toStatus }, transaction)
+}
+
+/**
+ * Asigna (o retira) el responsable directo dentro del área del reporte y lo deja en el historial.
+ * Quien llama valida que el responsable sea personal operativo activo de esa área.
+ * No cambia el estado: el reporte ya está "asignado" al área.
+ */
+export async function setAssignee(
+  report: Report,
+  assignee: { id: number; name: string } | null,
+  actorId: number | null,
+  note?: string | null,
+  transaction?: Transaction,
+) {
+  await inTx(transaction, async (t) => {
+    await ReportHistory.create(
+      {
+        reportId: report.id,
+        kind: 'asignacion',
+        fromStatus: report.status,
+        toStatus: report.status,
+        fromAreaId: report.areaId,
+        toAreaId: report.areaId,
+        // La nota no lleva el nombre del responsable: el ciudadano ve el movimiento, no quién es
+        note: note || (assignee ? 'Se asignó un responsable del área' : 'El reporte volvió a la bandeja general del área'),
+        internal: false,
+        changedById: actorId,
+      },
+      { transaction: t },
+    )
+    await report.update({ assigneeId: assignee?.id ?? null }, { transaction: t })
+  })
+}
+
+/**
+ * Devuelve a la bandeja general del área los reportes ABIERTOS de un responsable
+ * (al desactivarlo, cambiarlo de área o quitarle el rol). Deja constancia en cada historial.
+ * Devuelve cuántos reportes se liberaron.
+ */
+export async function releaseAssignments(userId: number, actorId: number | null, reason: string, transaction?: Transaction) {
+  return inTx(transaction, async (t) => {
+    const reports = await Report.findAll({ where: { assigneeId: userId, status: OPEN_STATUSES }, transaction: t })
+    for (const report of reports) {
+      await setAssignee(report, null, actorId, `El reporte volvió a la bandeja general del área: ${reason}`, t)
+    }
+    return reports.length
+  })
 }
 
 /**

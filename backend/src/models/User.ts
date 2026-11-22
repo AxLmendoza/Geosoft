@@ -6,10 +6,10 @@ import { Report } from './Report'
 import { Area } from './Area'
 
 @DefaultScope(() => ({
-  attributes: { exclude: ['password', 'token', 'tokenExpiresAt'] },
+  attributes: { exclude: ['password', 'token', 'tokenExpiresAt', 'inviteTokenHash'] },
 }))
 @Scopes(() => ({
-  withSecrets: { attributes: { include: ['password', 'token', 'tokenExpiresAt'] } },
+  withSecrets: { attributes: { include: ['password', 'token', 'tokenExpiresAt', 'inviteTokenHash'] } },
 }))
 @Table({ tableName: 'users' })
 export class User extends Model {
@@ -58,6 +58,37 @@ export class User extends Model {
 
   @BelongsTo(() => Area, { onDelete: 'SET NULL' })
   declare area: Area | null
+
+  /**
+   * Cuenta habilitada. Desactivar NO borra al usuario ni su historial:
+   * solo impide iniciar sesión y usar la API (se revisa en cada petición).
+   * Es distinto de `banned`, que es una sanción de moderación.
+   */
+  @AllowNull(false)
+  @Default(true)
+  @Column(DataType.BOOLEAN)
+  declare active: boolean
+
+  @Column(DataType.DATE)
+  declare lastLoginAt: Date | null
+
+  /**
+   * Invitación del personal: solo se guarda el hash SHA-256 del enlace (nunca el token).
+   * null cuando la invitación ya se aceptó o se invalidó.
+   */
+  @Column(DataType.STRING(64))
+  declare inviteTokenHash: string | null
+
+  @Column(DataType.DATE)
+  declare inviteExpiresAt: Date | null
+
+  /** Fecha de la última invitación enviada (se conserva al aceptarla) */
+  @Column(DataType.DATE)
+  declare invitedAt: Date | null
+
+  /** Administrador que dio de alta la cuenta (null = registro propio) */
+  @Column(DataType.INTEGER)
+  declare invitedById: number | null
 
   @HasMany(() => Report)
   declare reports: Report[]

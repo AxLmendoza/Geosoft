@@ -20,6 +20,10 @@ const AdminStatsView = lazy(() => import('@/views/admin/AdminStatsView'))
 const AdminReportsView = lazy(() => import('@/views/admin/AdminReportsView'))
 const AdminAreasView = lazy(() => import('@/views/admin/AdminAreasView'))
 const AdminHomeView = lazy(() => import('@/views/admin/AdminHomeView'))
+const StaffListView = lazy(() => import('@/views/admin/StaffListView'))
+const StaffNewView = lazy(() => import('@/views/admin/StaffNewView'))
+const StaffDetailView = lazy(() => import('@/views/admin/StaffDetailView'))
+const AcceptInvitationView = lazy(() => import('@/views/auth/AcceptInvitationView'))
 const UsersView = lazy(() => import('@/views/UsersView'))
 const LoginView = lazy(() => import('@/views/auth/LoginView'))
 const RegisterView = lazy(() => import('@/views/auth/RegisterView'))
@@ -67,6 +71,9 @@ export default function Router() {
             <Route path="/admin/stats" element={page(<AdminStatsView />)} />
             <Route path="/admin/reports" element={page(<AdminReportsView />)} />
             <Route path="/admin/areas" element={page(<AdminAreasView />)} />
+            <Route path="/admin/staff" element={page(<StaffListView />)} />
+            <Route path="/admin/staff/new" element={page(<StaffNewView />)} />
+            <Route path="/admin/staff/:userId" element={page(<StaffDetailView />)} />
           </Route>
 
           <Route path="*" element={page(<NotFoundView />)} />
@@ -79,6 +86,7 @@ export default function Router() {
           <Route path="request-code" element={page(<RequestCodeView />)} />
           <Route path="forgot-password" element={page(<ForgotPasswordView />)} />
           <Route path="new-password" element={page(<NewPasswordView />)} />
+          <Route path="invitation" element={page(<AcceptInvitationView />)} />
         </Route>
       </Routes>
     </BrowserRouter>

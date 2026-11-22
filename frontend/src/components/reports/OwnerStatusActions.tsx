@@ -6,7 +6,7 @@ import Modal from '@/components/ui/Modal'
 import { isClosed } from '@/lib/labels'
 import type { Report } from '@/types'
 
-type Target = 'en_proceso' | 'resuelto'
+type Target = 'en_proceso'
 
 const COPY: Record<Target, { title: string; text: string; button: string }> = {
   en_proceso: {
@@ -14,14 +14,12 @@ const COPY: Record<Target, { title: string; text: string; button: string }> = {
     text: 'Marca el reporte "Atención en proceso" si ya vinieron a revisar o están trabajando en ello.',
     button: 'Sí, ya le están dando seguimiento',
   },
-  resuelto: {
-    title: '¿Ya quedó solucionado?',
-    text: 'El reporte se marcará como resuelto y se retirará del mapa en 2 días. Seguirá en tu historial.',
-    button: 'Sí, ya quedó',
-  },
 }
 
-/** Botones para el ciudadano que hizo el reporte */
+/**
+ * Botón para el ciudadano que hizo el reporte. "Ya quedó" se sustituyó por la
+ * confirmación ciudadana (CitizenConfirmation), que no cambia el estado oficial.
+ */
 export default function OwnerStatusActions({ report }: { report: Report }) {
   const queryClient = useQueryClient()
   const [target, setTarget] = useState<Target | null>(null)
@@ -44,7 +42,6 @@ export default function OwnerStatusActions({ report }: { report: Report }) {
   return (
     <>
       {/* El contenedor (tarjeta "Tu reporte") lo pone la vista de detalle */}
-      <button onClick={() => setTarget('resuelto')} className="btn-secondary w-full">Ya quedó solucionado</button>
       {report.status !== 'en_proceso' && (
         <button onClick={() => setTarget('en_proceso')} className="btn-secondary w-full">Ya me dieron seguimiento</button>
       )}

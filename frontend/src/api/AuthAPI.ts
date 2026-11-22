@@ -50,3 +50,16 @@ export async function resetPassword({ email, token, form }: { email: string; tok
 export async function getUser() {
   return (await api.get<User>('/auth/user')).data
 }
+
+/** Invitación del personal: comprueba el enlace antes de mostrar el formulario */
+export async function validateInvitation(input: { email: string; token: string }) {
+  try {
+    return (await api.post<{ name: string }>('/auth/invitation/validate', input)).data
+  } catch (e) { rethrow(e) }
+}
+
+export async function acceptInvitation(input: { email: string; token: string } & NewPasswordForm) {
+  try {
+    return (await api.post<Msg>('/auth/invitation/accept', input)).data.message
+  } catch (e) { rethrow(e) }
+}

@@ -5,6 +5,9 @@ import { Area } from '../models/Area'
 import type { Role } from '../models/constants'
 import { computeStats } from '../utils/stats'
 import { buildStatsPdf } from '../utils/pdfReport'
+import { db } from '../config/db'
+import { audit } from '../utils/audit'
+import { releaseAssignments } from '../utils/reportStatus'
 
 const range = (req: Request) => ({ from: req.query.from as string | undefined, to: req.query.to as string | undefined })
 
@@ -23,8 +26,8 @@ export class AdminController {
       res.status(403).json({ error: 'No puedes cambiar el rol de un administrador' })
       return
     }
-    if (target.banned || !target.confirmed) {
-      res.status(400).json({ error: 'El usuario debe estar confirmado y no baneado' })
+    if (target.banned || !target.confirmed || !target.active) {
+      res.status(400).json({ error: 'El usuario debe estar activo, confirmado y no suspendido' })
       return
     }
     const role = req.body.role as Role
@@ -35,9 +38,21 @@ export class AdminController {
         res.status(400).json({ error: 'Selecciona un área activa para el personal operativo' })
         return
       }
+      if (area.type === 'externa') {
+        res.status(400).json({ error: 'El personal operativo debe pertenecer a un área municipal u organismo, no a una autoridad externa' })
+        return
+      }
       areaId = area.id
     }
-    await target.update({ role, areaId })
+    const from = { role: target.role, areaId: target.areaId }
+    await db.transaction(async (t) => {
+      // Sus reportes abiertos vuelven a la bandeja del área si deja el rol o cambia de área
+      if (from.role === 'operativo' && (role !== 'operativo' || areaId !== from.areaId)) {
+        await releaseAssignments(target.id, req.user!.id, 'el responsable cambió de rol o de área', t)
+      }
+      await target.update({ role, areaId }, { transaction: t })
+      await audit(req, { action: 'user.role_changed', targetType: 'user', targetId: target.id, details: { from, to: { role, areaId } } }, t)
+    })
     const msg: Record<string, string> = {
       ciudadano: `${target.name} ahora es ciudadano`,
       moderador: `${target.name} ahora es moderador`,
@@ -72,6 +87,7 @@ export class AdminController {
     }
     await report.restore()
     await report.update({ deletedById: null })
+    await audit(req, { action: 'report.restored', targetType: 'report', targetId: report.id })
     res.json({ message: 'Reporte restaurado' })
   }
 }

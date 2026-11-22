@@ -185,59 +185,142 @@ input[type='number'] {
   }
 }
 
-/* ---------- Pines del mapa: icono según el estado del reporte ---------- */
-.gs-pin-wrapper {
-  background: transparent;
-  border: none;
-}
+/* ---------- Marcadores del mapa ("señal GeoScript") ----------
+ * Placa de 30 px con punta (rombo si es crítico) dentro de un área táctil de 44×48 px.
+ * Un solo glifo = etapa. El seleccionado crece, lleva contorno azul marino y anillo en el suelo.
+ * Sin animaciones continuas: solo responden al cursor o a la selección. */
 .gs-pin {
   position: relative;
-  width: 56px;
-  height: 56px;
-  border-radius: 9999px;
+  display: block;
+  width: 44px;
+  height: 48px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transform-origin: 50% 100%;
+  transition: transform 0.16s var(--ease-out-soft);
+}
+span.gs-pin {
+  cursor: default;
+}
+.gs-pin__shape {
+  position: absolute;
+  left: 4px;
+  bottom: 0;
+  width: 36px;
+  height: 43px;
+  overflow: visible;
+  filter: drop-shadow(0 1.5px 2px rgb(15 23 42 / 0.32));
+}
+.gs-pin__ground {
+  fill: rgb(15 23 42 / 0.3);
+}
+.gs-pin__ground--on {
+  fill: rgb(15 23 42 / 0.12);
+  stroke: #0f172a;
+  stroke-width: 1.5;
+}
+/* El glifo va centrado en la placa (punto 18,18 del SVG) */
+.gs-pin__glyph {
+  position: absolute;
+  left: 14px;
+  top: 15px;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  pointer-events: none;
+}
+.gs-pin__glyph svg {
+  width: 100%;
+  height: 100%;
+}
+button.gs-pin:hover {
+  transform: translateY(-2px);
+}
+button.gs-pin:focus-visible {
+  outline: none;
+}
+button.gs-pin:focus-visible .gs-pin__shape {
+  filter: drop-shadow(0 0 0 #0f172a) drop-shadow(0 0 1.5px #0f172a) drop-shadow(0 0 3px var(--color-brand-500));
+}
+.gs-pin--selected,
+.gs-pin--selected:hover {
+  transform: scale(1.18);
+}
+.gs-pin--selected .gs-pin__shape {
+  filter: drop-shadow(0 4px 6px rgb(15 23 42 / 0.4));
+}
+/* Crítico: halo rojo fijo (sin parpadeo) además de la forma de rombo */
+.gs-pin--critico .gs-pin__shape {
+  filter: drop-shadow(0 0 3.5px rgb(220 38 38 / 0.6)) drop-shadow(0 1.5px 2px rgb(15 23 42 / 0.32));
+}
+.gs-pin--critico .gs-pin__glyph {
+  left: 15px;
+  width: 14px;
+}
+/* Cerrados y fuera de ruta: más discretos para no competir con lo pendiente */
+.gs-pin--cerrado:not(.gs-pin--selected),
+.gs-pin--fuera:not(.gs-pin--selected) {
+  opacity: 0.78;
+}
+
+/* Grupo de reportes: anillo con la proporción de cada etapa y número grande */
+.gs-cluster {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 4px solid var(--pin-color);
-  background: rgb(255 255 255 / 0.92);
-  backdrop-filter: blur(6px);
-  -webkit-backdrop-filter: blur(6px);
-  box-shadow: 0 8px 18px -4px rgb(15 23 42 / 0.4);
-  cursor: pointer;
-  transition: transform 0.2s var(--ease-out-soft);
-}
-.gs-pin:hover {
-  transform: translateY(-2px) scale(1.1);
-  z-index: 10;
-}
-/* la "punta" del pin */
-.gs-pin::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -14px;
-  transform: translateX(-50%);
-  border-left: 9px solid transparent;
-  border-right: 9px solid transparent;
-  border-top: 12px solid var(--pin-color);
-}
-.gs-pin--resolved {
-  opacity: 0.85;
-}
-.gs-pin--critical::before {
-  content: '';
-  position: absolute;
-  inset: -8px;
+  padding: 4px;
+  border: 0;
   border-radius: 9999px;
-  border: 3px solid var(--pin-color);
-  animation: gs-ping 1.6s cubic-bezier(0, 0, 0.2, 1) infinite;
+  box-shadow: 0 0 0 2px #fff, 0 3px 10px -2px rgb(15 23 42 / 0.45);
+  cursor: pointer;
+  transition: transform 0.16s var(--ease-out-soft);
 }
-@keyframes gs-ping {
-  75%,
-  100% {
-    transform: scale(1.5);
-    opacity: 0;
-  }
+.gs-cluster:hover {
+  transform: scale(1.06);
+}
+.gs-cluster:focus-visible {
+  outline: 3px solid #0f172a;
+  outline-offset: 2px;
+}
+.gs-cluster__count {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  border-radius: 9999px;
+  background: #fff;
+  color: #0f172a;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+/* Críticos dentro del grupo: rombo rojo con el número (misma forma que el pin crítico) */
+.gs-cluster__critical {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 5px;
+  background: #dc2626;
+  box-shadow: 0 0 0 2px #fff;
+  transform: rotate(45deg);
+}
+.gs-cluster__critical span {
+  transform: rotate(-45deg);
+  color: #fff;
+  font-size: 10.5px;
+  font-weight: 800;
+  line-height: 1;
 }
 
 .gs-picker {
@@ -267,35 +350,51 @@ input[type='number'] {
   box-shadow: 0 0 0 6px rgb(59 114 246 / 0.25);
 }
 
-/* Popup sin padding para que la imagen llegue al borde */
-.gs-popup .mapboxgl-popup-content {
-  padding: 0;
+/* Tarjeta del reporte (popup en escritorio, hoja inferior en celular) */
+.gs-card {
+  width: 100%;
   overflow: hidden;
   border-radius: 1rem;
   background: #fff;
   border: 1px solid var(--color-line);
   box-shadow: var(--shadow-pop);
+  font-family: var(--font-sans);
 }
-.gs-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip {
+.gs-card a.btn-primary {
+  color: #fff;
+}
+/* La tarjeta del mapa tiene prioridad sobre el aviso de instalación */
+body[data-map-card] .gs-install {
+  display: none;
+}
+.gs-popup {
+  width: 288px;
+  max-width: calc(100vw - 24px);
+  /* Por encima de los controles flotantes del mapa (filtros, simbología): la tarjeta es el foco */
+  z-index: 30;
+}
+.gs-popup .mapboxgl-popup-content {
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 1rem;
+}
+.gs-popup.mapboxgl-popup-anchor-bottom .mapboxgl-popup-tip,
+.gs-popup.mapboxgl-popup-anchor-bottom-left .mapboxgl-popup-tip,
+.gs-popup.mapboxgl-popup-anchor-bottom-right .mapboxgl-popup-tip {
   border-top-color: #fff;
 }
-.gs-popup .mapboxgl-popup-close-button {
-  z-index: 1;
-  width: 28px;
-  height: 28px;
-  margin: 6px;
-  border-radius: 9999px;
-  font-size: 18px;
-  color: #0f172a;
-  background: rgb(255 255 255 / 0.8);
-  backdrop-filter: blur(8px);
+.gs-popup.mapboxgl-popup-anchor-top .mapboxgl-popup-tip,
+.gs-popup.mapboxgl-popup-anchor-top-left .mapboxgl-popup-tip,
+.gs-popup.mapboxgl-popup-anchor-top-right .mapboxgl-popup-tip {
+  border-bottom-color: #f1f5f9;
 }
 .mapboxgl-map {
   font-family: inherit;
 }
 /* El pin bajo el cursor queda por encima de los vecinos */
 .mapboxgl-marker:hover {
-  z-index: 10;
+  z-index: 10 !important;
 }
 /* Controles nativos de Mapbox con el mismo estilo que los botones del mapa */
 .mapboxgl-ctrl-group {
