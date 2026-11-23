@@ -5,6 +5,28 @@ export const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_TOKEN ?? ''
 /** Estilo Standard: incluye edificios 3D, monumentos y árboles donde Mapbox tiene datos */
 export const MAP_STYLE = 'mapbox://styles/mapbox/standard'
 
+/**
+ * Colores del mapa base a juego con la paleta salvia y beige de la interfaz.
+ * Se pasan al crear el mapa (opción `config` de Mapbox, por id de importación "basemap"),
+ * así el estilo carga ya con estos colores y no parpadea. Mapbox ignora las propiedades
+ * que su versión no conozca.
+ */
+export const MAP_CONFIG = {
+  basemap: {
+    lightPreset: 'day',
+    colorLand: '#ece8dd',
+    colorGreenspace: '#c9d5c1',
+    colorWater: '#b7cbc4',
+    colorRoads: '#fbfaf5',
+    colorTrunks: '#ebe3cc',
+    colorMotorways: '#dccfae',
+    colorPlaceLabels: '#34493b',
+    colorRoadLabels: '#5a6e5f',
+    colorPointOfInterestLabels: '#4c6b55',
+    colorAdminBoundaries: '#92aa97',
+  },
+}
+
 /** Zona de trabajo: Tecamachalco, Puebla */
 export const ZONE_NAME = 'Tecamachalco, Puebla'
 export const DEFAULT_CENTER: Coords = { lat: 18.8826, lng: -97.7316 }

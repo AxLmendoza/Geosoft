@@ -53,7 +53,7 @@ export default function ImageInput({ value, onChange, error }: Props) {
         <button
           type="button"
           onClick={() => onChange(null)}
-          className="absolute right-2 top-2 rounded-full bg-slate-900/70 p-1.5 text-white hover:bg-slate-900"
+          className="absolute right-2 top-2 rounded-full bg-night/75 p-1.5 text-cream ring-1 ring-white/20 hover:bg-night"
           aria-label="Quitar imagen"
         >
           <XMarkIcon className="size-5" />
@@ -66,7 +66,7 @@ export default function ImageInput({ value, onChange, error }: Props) {
 
   if (processing) {
     return (
-      <div role="status" className="flex items-center justify-center gap-2 rounded-2xl bg-white/50 px-6 py-10 text-sm font-bold text-brand-700">
+      <div role="status" className="flex items-center justify-center gap-2 rounded-2xl bg-white/55 px-6 py-10 text-sm font-bold text-brand-700">
         <span className="size-4 animate-spin rounded-full border-2 border-brand-600 border-t-transparent" /> Preparando la foto…
       </div>
     )
@@ -82,7 +82,7 @@ export default function ImageInput({ value, onChange, error }: Props) {
           <button
             type="button"
             onClick={() => cameraInput.current?.click()}
-            className="flex flex-col items-center gap-2 rounded-2xl bg-brand-600 px-4 py-8 font-bold text-white shadow-lg active:scale-95"
+            className="flex flex-col items-center gap-2 rounded-2xl bg-olive px-4 py-8 font-bold text-cream shadow-lg active:scale-95"
           >
             <CameraIcon className="size-12" />
             Tomar foto
@@ -90,7 +90,7 @@ export default function ImageInput({ value, onChange, error }: Props) {
           <button
             type="button"
             onClick={() => galleryInput.current?.click()}
-            className="flex flex-col items-center gap-2 rounded-2xl bg-white px-4 py-8 font-bold text-brand-700 ring-2 ring-brand-200 active:scale-95"
+            className="flex flex-col items-center gap-2 rounded-2xl bg-white/55 px-4 py-8 font-bold text-brand-700 ring-1 ring-brand-200 active:scale-95"
           >
             <PhotoIcon className="size-12" />
             Galería
@@ -106,7 +106,7 @@ export default function ImageInput({ value, onChange, error }: Props) {
       <div
         {...getRootProps()}
         className={`flex cursor-pointer flex-col items-center justify-center gap-2 rounded-2xl border-2 border-dashed px-6 py-10 text-center transition ${
-          isDragActive ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-white/40 hover:border-brand-400 hover:bg-brand-50/50'
+          isDragActive ? 'border-brand-500 bg-brand-50' : 'border-slate-300 bg-white/45 hover:border-brand-400 hover:bg-brand-50/50'
         }`}
       >
         <input {...getInputProps()} />

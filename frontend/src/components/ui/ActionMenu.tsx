@@ -18,7 +18,7 @@ export default function ActionMenu({ actions, label = 'Más acciones' }: { actio
       <MenuItems
         anchor="bottom end"
         transition
-        className="z-[1300] w-60 origin-top-right rounded-xl border border-line bg-white p-1 shadow-pop [--anchor-gap:6px] focus:outline-none transition duration-150 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
+        className="z-[1300] w-60 origin-top-right rounded-xl border border-line-strong bg-surface-raised/95 p-1 backdrop-blur-xl shadow-pop [--anchor-gap:6px] focus:outline-none transition duration-150 ease-out data-[closed]:scale-95 data-[closed]:opacity-0"
       >
         {visible.map((a) => (
           <MenuItem key={a.label} disabled={a.disabled}>

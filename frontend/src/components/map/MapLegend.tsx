@@ -15,11 +15,11 @@ export default function MapLegend({ className = '' }: { className?: string }) {
       ))}
       <li className="flex items-center gap-2.5">
         <span className="flex w-7 justify-center">
-          <span className="flex size-7 items-center justify-center rounded-full bg-white font-display text-[11px] font-bold text-slate-900 ring-[3px] ring-brand-700">5</span>
+          <span className="gs-spread-center" />
         </span>
         <span className="leading-tight">
-          <span className="font-semibold text-slate-900">Grupo de reportes</span>
-          <span className="block text-xs text-slate-500">Acerca el mapa o tócalo para separarlos</span>
+          <span className="font-semibold text-slate-900">Varios reportes en el mismo lugar</span>
+          <span className="block text-xs text-slate-500">Sus pines se abren alrededor de este punto; toca cada uno para verlo</span>
         </span>
       </li>
     </ul>

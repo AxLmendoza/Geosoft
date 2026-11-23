@@ -47,7 +47,7 @@ export default function BlacklistPanel() {
       <div className="overflow-hidden rounded-2xl glass">
         {isLoading && <p className="p-6 text-slate-500">Cargando…</p>}
         {!isLoading && list.length === 0 && <p className="p-8 text-center text-slate-500">No hay correos vetados</p>}
-        <ul className="divide-y divide-slate-100">
+        <ul className="divide-y divide-line">
           {list.map((b) => (
             <li key={b.id} className="flex items-start justify-between gap-3 p-4">
               <div className="min-w-0">

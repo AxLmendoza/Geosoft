@@ -44,7 +44,7 @@ export default function MyReportsView() {
         </Link>
       </header>
 
-      <div role="tablist" aria-label="Filtrar mis reportes" className="flex w-full gap-1 overflow-x-auto rounded-2xl border border-line bg-white p-1 shadow-xs sm:w-fit">
+      <div role="tablist" aria-label="Filtrar mis reportes" className="flex w-full gap-1 overflow-x-auto rounded-2xl glass p-1 sm:w-fit">
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -52,12 +52,12 @@ export default function MyReportsView() {
             aria-selected={tab === t.id}
             onClick={() => setTab(t.id)}
             className={`relative flex min-h-10 flex-1 items-center justify-center gap-2 whitespace-nowrap rounded-xl px-4 py-2 text-sm font-semibold transition-colors sm:flex-none ${
-              tab === t.id ? 'text-white' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+              tab === t.id ? 'text-cream' : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
             }`}
           >
-            {tab === t.id && <m.span layoutId="mine-tab" transition={SPRING} className="absolute inset-0 rounded-xl bg-brand-600 shadow-brand" aria-hidden />}
+            {tab === t.id && <m.span layoutId="mine-tab" transition={SPRING} className="absolute inset-0 rounded-xl bg-olive shadow-brand" aria-hidden />}
             <span className="relative">{t.label}</span>
-            <span className={`relative min-w-5 rounded-full px-1.5 text-xs tabular-nums ${tab === t.id ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>{isLoading ? '·' : counts[t.id]}</span>
+            <span className={`relative min-w-5 rounded-full px-1.5 text-xs tabular-nums ${tab === t.id ? 'bg-cream/15 text-cream' : 'bg-slate-100 text-slate-600'}`}>{isLoading ? '·' : counts[t.id]}</span>
           </button>
         ))}
       </div>

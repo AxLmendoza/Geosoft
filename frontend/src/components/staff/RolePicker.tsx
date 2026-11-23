@@ -11,7 +11,7 @@ export default function RolePicker({ value, onChange, disabled = false }: { valu
         <Radio
           key={role}
           value={role}
-          className="group relative flex cursor-pointer gap-3 rounded-xl border border-slate-300 bg-white p-3.5 transition hover:border-slate-400 data-[checked]:border-brand-600 data-[checked]:bg-brand-50/60 data-[checked]:ring-1 data-[checked]:ring-brand-600 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60 data-[focus]:outline-2 data-[focus]:outline-offset-2 data-[focus]:outline-brand-600"
+          className="group relative flex cursor-pointer gap-3 rounded-xl border border-slate-300 bg-white/45 p-3.5 transition hover:border-slate-400 data-[checked]:border-brand-600 data-[checked]:bg-brand-50/60 data-[checked]:ring-1 data-[checked]:ring-brand-600 data-[disabled]:cursor-not-allowed data-[disabled]:opacity-60 data-[focus]:outline-2 data-[focus]:outline-offset-2 data-[focus]:outline-brand-600"
         >
           <span className="mt-0.5 flex size-4 shrink-0 items-center justify-center rounded-full border border-slate-400 bg-white group-data-[checked]:border-brand-600" aria-hidden>
             <span className="size-2 rounded-full bg-brand-600 opacity-0 group-data-[checked]:opacity-100" />

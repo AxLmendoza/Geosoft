@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import Map, { NavigationControl, Source, useMap, type MapMouseEvent } from 'react-map-gl/mapbox'
 import { CubeIcon, MapIcon } from '@heroicons/react/24/outline'
-import { DEFAULT_CENTER, MAPBOX_TOKEN, MAP_BOUNDS, MAP_STYLE, MIN_ZOOM, PITCH_3D, ZONE_NAME } from '@/lib/mapConfig'
+import { DEFAULT_CENTER, MAPBOX_TOKEN, MAP_BOUNDS, MAP_CONFIG, MAP_STYLE, MIN_ZOOM, PITCH_3D, ZONE_NAME } from '@/lib/mapConfig'
 import type { Coords } from '@/hooks/useGeolocation'
 
 type Props = {
@@ -18,7 +18,7 @@ type Props = {
   initialPitch?: number
   /**
    * Mapa base simplificado para que los reportes destaquen: oculta los iconos y etiquetas
-   * de comercios (POI) y atenúa los colores. Conserva calles, colonias, relieve y la atribución.
+   * de comercios (POI); los colores suaves ya vienen de la paleta del mapa. Conserva calles, colonias, relieve y la atribución.
    */
   simplified?: boolean
   children?: ReactNode
@@ -28,7 +28,6 @@ type Props = {
 function simplifyBasemap(map: { setConfigProperty?: (importId: string, key: string, value: unknown) => void }) {
   try {
     map.setConfigProperty?.('basemap', 'showPointOfInterestLabels', false)
-    map.setConfigProperty?.('basemap', 'theme', 'faded')
   } catch {
     /* estilo sin estas propiedades: se deja como está */
   }
@@ -94,7 +93,7 @@ function ViewToggle({ initial3D }: { initial3D: boolean }) {
 export default function BaseMap({ center = DEFAULT_CENTER, zoom = 14, onClick, showOverlay = true, showZone = true, overlayClassName = 'left-3 top-3', initialPitch = PITCH_3D, simplified = false, children }: Props) {
   if (!MAPBOX_TOKEN) {
     return (
-      <div className="flex h-full w-full items-center justify-center bg-white/40 p-6 text-center text-sm text-slate-500">
+      <div className="flex h-full w-full items-center justify-center bg-white/45 p-6 text-center text-sm text-slate-500">
         Falta configurar VITE_MAPBOX_TOKEN en el archivo .env para mostrar el mapa.
       </div>
     )
@@ -104,6 +103,7 @@ export default function BaseMap({ center = DEFAULT_CENTER, zoom = 14, onClick, s
     <Map
       mapboxAccessToken={MAPBOX_TOKEN}
       mapStyle={MAP_STYLE}
+      config={MAP_CONFIG}
       initialViewState={{ longitude: center.lng, latitude: center.lat, zoom, pitch: initialPitch, bearing: initialPitch ? -17 : 0 }}
       maxBounds={MAP_BOUNDS}
       minZoom={MIN_ZOOM}

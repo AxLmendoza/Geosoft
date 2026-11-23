@@ -160,7 +160,7 @@ export default function NewReportView() {
           name="anonymous"
           control={control}
           render={({ field }) => (
-            <Field className="flex items-start justify-between gap-4 rounded-xl bg-white/50 p-4">
+            <Field className="flex items-start justify-between gap-4 rounded-xl bg-white/55 p-4">
               <div>
                 <Label className="flex items-center gap-1.5 font-bold text-slate-800">
                   <EyeSlashIcon className="size-5" /> Publicar como anónimo

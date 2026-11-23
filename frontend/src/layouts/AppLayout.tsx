@@ -20,7 +20,7 @@ function Avatar({ name, className = 'size-9 text-sm' }: { name?: string; classNa
   return (
     <span
       aria-hidden
-      className={`flex shrink-0 items-center justify-center rounded-full bg-brand-600 font-display font-semibold text-white ring-2 ring-white ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-sage to-olive font-display font-semibold text-cream ring-2 ring-white/70 ${className}`}
     >
       {initials(name)}
     </span>
@@ -56,8 +56,8 @@ function SideLink({ item, layoutGroup }: { item: NavLinkItem; layoutGroup: strin
       to={item.to}
       end={item.end}
       className={({ isActive }) =>
-        `relative flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-[15px] font-medium transition-colors duration-150 ${
-          isActive ? 'text-slate-950' : 'text-slate-600 hover:bg-slate-900/[0.04] hover:text-slate-900'
+        `group relative flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-[15px] font-medium transition-colors duration-200 ${
+          isActive ? 'text-slate-950' : 'text-slate-500 hover:bg-slate-950/[0.05] hover:text-slate-900'
         }`
       }
     >
@@ -67,11 +67,11 @@ function SideLink({ item, layoutGroup }: { item: NavLinkItem; layoutGroup: strin
             <m.span
               layoutId={`nav-active-${layoutGroup}`}
               transition={SPRING}
-              className="absolute inset-0 rounded-xl bg-white shadow-card ring-1 ring-line"
+              className="absolute inset-0 rounded-xl bg-gradient-to-r from-slate-950/[0.1] to-slate-950/[0.04] ring-1 ring-line-strong before:absolute before:left-0 before:top-1/2 before:h-5 before:w-[3px] before:-translate-y-1/2 before:rounded-full before:bg-fern before:shadow-[0_0_12px_rgb(163_188_151/0.9)]"
               aria-hidden
             />
           )}
-          <item.icon className={`relative size-5 shrink-0 ${isActive ? 'text-brand-600' : 'text-slate-400'}`} aria-hidden />
+          <item.icon className={`relative size-5 shrink-0 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-110 ${isActive ? 'text-fern' : 'text-slate-400 group-hover:text-slate-700'}`} aria-hidden />
           <span className="relative truncate">{item.label}</span>
         </>
       )}
@@ -103,16 +103,16 @@ function TabLink({ to, label, icon: Icon, end }: { to: string; label: string; ic
       end={end}
       className={({ isActive }) =>
         `relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold transition-colors ${
-          isActive ? 'text-brand-700' : 'text-slate-500 active:text-slate-800'
+          isActive ? 'text-brand-800' : 'text-slate-500 active:text-slate-800'
         }`
       }
     >
       {({ isActive }) => (
         <>
           {isActive && (
-            <m.span layoutId="tab-active" transition={SPRING} className="absolute top-1 h-8 w-14 rounded-full bg-brand-600/10" aria-hidden />
+            <m.span layoutId="tab-active" transition={SPRING} className="absolute top-1 h-8 w-14 rounded-full bg-fern/[0.14] ring-1 ring-fern/25" aria-hidden />
           )}
-          <Icon className="relative size-6" aria-hidden />
+          <Icon className={`relative size-6 transition-transform duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] ${isActive ? 'scale-105' : ''}`} aria-hidden />
           <span className="relative max-w-full truncate px-1">{label}</span>
         </>
       )}
@@ -126,7 +126,7 @@ function ReportTab({ active }: { active: boolean }) {
     <Link to="/reports/new" className="flex min-w-0 flex-1 flex-col items-center justify-end gap-0.5 pb-1.5 text-[11px] font-semibold text-brand-700" aria-current={active ? 'page' : undefined}>
       <m.span
         whileTap={{ scale: 0.92 }}
-        className={`-mt-5 flex size-14 items-center justify-center rounded-full text-white shadow-brand ring-4 ring-white/90 ${active ? 'bg-brand-700' : 'bg-brand-600'}`}
+        className={`-mt-5 flex size-14 items-center justify-center rounded-full text-cream shadow-brand ring-4 ring-white/90 transition-colors ${active ? 'bg-olive-bright' : 'bg-olive'}`}
       >
         <CameraIcon className="size-7" aria-hidden />
       </m.span>
@@ -198,7 +198,7 @@ export default function AppLayout() {
       </a>
 
       {/* ---------- Escritorio / tablet: barra lateral con etiquetas ---------- */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-canvas lg:flex" aria-label="Navegación principal">
+      <aside className="gs-sidebar gs-dark fixed inset-y-3 left-3 z-40 hidden w-[15.25rem] flex-col overflow-hidden rounded-[1.75rem] lg:flex" aria-label="Navegación principal">
         <Link to="/" className="flex items-center px-5 pb-4 pt-6" aria-label="GeoScript, inicio">
           <Logo dark />
         </Link>
@@ -212,13 +212,13 @@ export default function AppLayout() {
         <nav className="flex-1 overflow-y-auto px-4 pb-4">
           <NavGroups groups={groups} layoutGroup="side" />
         </nav>
-        <div className="border-t border-line p-3">{account}</div>
+        <div className="border-t border-line bg-night/15 p-3">{account}</div>
       </aside>
 
       {/* ---------- Celular: encabezado compacto fuera del mapa ---------- */}
       {!isHome && (
         <header
-          className="material sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 shadow-none! border-b border-slate-900/[0.06] lg:hidden"
+          className="material sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 shadow-none! border-b border-line lg:hidden"
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
         >
           <Link to="/" aria-label="GeoScript, inicio"><Logo dark /></Link>
@@ -232,7 +232,7 @@ export default function AppLayout() {
 
       {/* ---------- Celular: barra inferior con etiquetas ---------- */}
       <nav
-        className={`material fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-slate-900/[0.06] px-2 pt-1 sm:px-[calc(50vw-17rem)] transition-transform duration-200 lg:hidden ${typing ? 'translate-y-full' : ''}`}
+        className={`material fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-line px-2 pt-1 sm:px-[calc(50vw-17rem)] transition-transform duration-200 lg:hidden ${typing ? 'translate-y-full' : ''}`}
         // Altura fija = la misma que libra el mapa (bottom de <main>): sin rendijas con ningún rol
         style={{ height: 'calc(4.25rem + env(safe-area-inset-bottom))', paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
         aria-label="Navegación principal"
@@ -252,11 +252,11 @@ export default function AppLayout() {
 
       {/* Menú completo del celular (hoja inferior) */}
       <Dialog open={menuOpen} onClose={setMenuOpen} className="relative z-[1300] lg:hidden">
-        <DialogBackdrop transition className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-200 data-[closed]:opacity-0" />
+        <DialogBackdrop transition className="fixed inset-0 bg-night/35 backdrop-blur-sm transition-opacity duration-200 data-[closed]:opacity-0" />
         <div className="fixed inset-x-0 bottom-0">
           <DialogPanel
             transition
-            className="max-h-[85dvh] overflow-y-auto rounded-t-3xl bg-white px-4 pb-4 pt-2 shadow-pop transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[closed]:translate-y-full data-[leave]:duration-200"
+            className="max-h-[85dvh] overflow-y-auto rounded-t-3xl glass-strong border-b-0 px-4 pb-4 pt-2 transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] data-[closed]:translate-y-full data-[leave]:duration-200"
             style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
           >
             <div className="mx-auto mb-3 h-1.5 w-10 rounded-full bg-slate-200" aria-hidden />
@@ -277,7 +277,7 @@ export default function AppLayout() {
 
       {isHome ? (
         // El inicio es el mapa; en el celular termina donde empieza la barra inferior
-        <main id="main" className="fixed inset-x-0 top-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] lg:bottom-0 lg:left-64">
+        <main id="main" className="fixed inset-x-0 top-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] lg:top-3 lg:right-3 lg:bottom-3 lg:left-[16.75rem] lg:overflow-hidden lg:rounded-[1.75rem] lg:shadow-pop lg:ring-1 lg:ring-line-strong">
           <Outlet />
         </main>
       ) : (

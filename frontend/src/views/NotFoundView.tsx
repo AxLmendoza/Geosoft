@@ -5,7 +5,7 @@ import { FadeIn } from '@/components/ui/Motion'
 export default function NotFoundView() {
   return (
     <FadeIn className="flex flex-col items-center py-20 text-center sm:py-28">
-      <span className="relative mb-6 flex size-20 items-center justify-center rounded-3xl bg-brand-50 text-brand-600 ring-8 ring-brand-50/60">
+      <span className="relative mb-6 flex size-20 animate-float items-center justify-center rounded-3xl bg-gradient-to-b from-brand-100 to-brand-50 text-brand-600 shadow-glow ring-8 ring-brand-50/60">
         <MapPinIcon className="size-10" aria-hidden />
       </span>
       <p className="eyebrow">Error 404</p>

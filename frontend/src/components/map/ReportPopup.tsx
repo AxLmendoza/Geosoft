@@ -61,7 +61,7 @@ export default function ReportPopup({ report, onClose, layout = 'popup' }: Props
     <button
       type="button"
       onClick={onClose}
-      className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white/95 text-slate-600 ring-1 ring-line transition-colors hover:bg-slate-100 hover:text-slate-950"
+      className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-white/90 text-slate-600 backdrop-blur ring-1 ring-line transition-colors hover:bg-slate-100 hover:text-slate-950"
       aria-label="Cerrar tarjeta"
     >
       <XMarkIcon className="size-5" aria-hidden />
@@ -87,7 +87,7 @@ export default function ReportPopup({ report, onClose, layout = 'popup' }: Props
         </span>
         <span
           className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset ${
-            report.severity === 'critica' ? 'bg-red-50 text-red-800 ring-red-200' : report.severity === 'alta' ? 'bg-orange-50 text-orange-800 ring-orange-200' : 'bg-white text-slate-600 ring-line'
+            report.severity === 'critica' ? 'bg-red-50 text-red-800 ring-red-200' : report.severity === 'alta' ? 'bg-orange-50 text-orange-800 ring-orange-200' : 'bg-white/55 text-slate-600 ring-line'
           }`}
         >
           {report.severity === 'critica' && <PinBadge kind="critico" size={14} />}
@@ -128,32 +128,5 @@ export default function ReportPopup({ report, onClose, layout = 'popup' }: Props
       </div>
       <div className="p-3.5">{body}</div>
     </article>
-  )
-}
-
-/** Varios reportes en el mismo punto (no se separan ni con el zoom máximo): lista para elegir */
-export function ReportPickList({ reports, onPick, onClose }: { reports: Report[]; onPick: (r: Report) => void; onClose: () => void }) {
-  return (
-    <div className="gs-card" role="dialog" aria-label={`${reports.length} reportes en este punto`}>
-      <header className="flex items-center justify-between gap-2 border-b border-line py-2 pl-3.5 pr-2">
-        <p className="text-sm font-semibold text-slate-900">{reports.length} reportes en este punto</p>
-        <button type="button" onClick={onClose} className="inline-flex size-9 items-center justify-center rounded-full text-slate-600 hover:bg-slate-100 hover:text-slate-950" aria-label="Cerrar lista">
-          <XMarkIcon className="size-5" aria-hidden />
-        </button>
-      </header>
-      <ul className="max-h-64 divide-y divide-line overflow-y-auto overscroll-contain">
-        {reports.map((r) => (
-          <li key={r.id}>
-            <button type="button" onClick={() => onPick(r)} className="flex min-h-12 w-full items-center gap-2.5 px-3.5 py-2.5 text-left hover:bg-slate-50 focus-visible:bg-slate-50">
-              <PinBadge kind={pinKind(r)} size={22} />
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-semibold text-slate-900">{r.title}</span>
-                <span className="block truncate text-xs text-slate-500">{r.category.name}, {STATUS[r.status].short.toLowerCase()}</span>
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-    </div>
   )
 }

@@ -133,7 +133,7 @@ export default function ReportFormDialog({ open, report, onClose }: Props) {
           <ImageInput value={image} onChange={setImage} error={submitted && !isEdit && !image ? 'La foto es obligatoria' : undefined} />
         </div>
 
-        <div className="flex flex-wrap gap-4 rounded-xl bg-white/50 p-3 text-sm font-semibold text-slate-700">
+        <div className="flex flex-wrap gap-4 rounded-xl bg-white/55 p-3 text-sm font-semibold text-slate-700">
           <label className="flex items-center gap-2">
             <input type="checkbox" className="size-4 accent-brand-600" {...register('anonymous')} /> Anónimo al público
           </label>
@@ -149,7 +149,7 @@ export default function ReportFormDialog({ open, report, onClose }: Props) {
         )}
 
         <div className="flex justify-end gap-2 pt-2">
-          <button type="button" onClick={onClose} className="rounded-xl px-4 py-3 font-bold text-slate-600 hover:bg-white/60">Cancelar</button>
+          <button type="button" onClick={onClose} className="rounded-xl px-4 py-3 font-bold text-slate-600 hover:bg-white/70">Cancelar</button>
           <button type="submit" disabled={isPending} className="btn-primary">
             {isPending ? 'Guardando…' : isEdit ? 'Guardar cambios' : 'Crear reporte'}
           </button>

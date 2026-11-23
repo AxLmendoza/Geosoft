@@ -150,12 +150,12 @@ export default function AttentionDialog({ report, mode, onClose }: Props) {
           {mode !== 'assign' && (
             <>
               <PhotoAttach value={image} onChange={setImage} label="Adjuntar evidencia (opcional)" />
-              <Field className="flex items-center justify-between gap-3 rounded-xl bg-white/50 p-3">
+              <Field className="flex items-center justify-between gap-3 rounded-xl bg-white/55 p-3">
                 <Label className="text-sm">
                   <span className="font-bold text-slate-800">Nota interna</span>
                   <span className="block text-xs text-slate-500">El ciudadano no la verá</span>
                 </Label>
-                <Switch checked={internal} onChange={setInternal} className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-slate-300 transition data-[checked]:bg-slate-800">
+                <Switch checked={internal} onChange={setInternal} className="group relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full bg-slate-300 transition data-[checked]:bg-brand-600">
                   <span className="pointer-events-none mt-0.5 ml-0.5 inline-block size-5 rounded-full bg-white shadow transition group-data-[checked]:translate-x-5" />
                 </Switch>
               </Field>

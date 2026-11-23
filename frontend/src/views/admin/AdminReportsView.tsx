@@ -155,7 +155,7 @@ export default function AdminReportsView() {
                   <th className="px-4 py-3 text-right"><span className="sr-only">Acciones</span></th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-line">
                 {reports.map((r) => (
                   <tr key={r.id} className={r.deletedAt ? 'opacity-60' : ''}>
                     <td className="px-4 py-3">

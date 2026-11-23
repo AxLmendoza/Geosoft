@@ -1,14 +1,62 @@
-import { defineConfig } from 'vite'
+import { defineConfig, type Plugin, type ServerOptions } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { fileURLToPath, URL } from 'node:url'
+import fs from 'node:fs'
 
-export default defineConfig({
+/**
+ * Modo "lan" (npm run dev:lan): para probar desde el celular en la misma red Wi-Fi.
+ * - Escucha en todas las interfaces (no solo localhost).
+ * - HTTPS con el certificado de .certs/ (lo genera scripts/lan-cert.sh): iOS exige contexto
+ *   seguro para la ubicación, la cámara web y el service worker.
+ * - Proxy de /api y /uploads hacia la API local: el teléfono solo habla con este servidor,
+ *   así no depende de CORS ni de la IP de la API (.env.lan deja VITE_API_URL vacía).
+ * `npm run dev`, el build y producción no cambian.
+ */
+const CERT_DIR = fileURLToPath(new URL('./.certs/', import.meta.url))
+const API_TARGET = process.env.LAN_API_TARGET ?? 'http://localhost:4000'
+
+function lanServer(): ServerOptions {
+  const key = `${CERT_DIR}server.key`
+  const cert = `${CERT_DIR}server.crt`
+  if (!fs.existsSync(key) || !fs.existsSync(cert)) {
+    throw new Error('Faltan los certificados de .certs/. Genéralos con: bash scripts/lan-cert.sh')
+  }
+  return {
+    host: true,
+    port: 5173,
+    strictPort: true,
+    https: { key: fs.readFileSync(key), cert: fs.readFileSync(cert) },
+    proxy: {
+      '/api': { target: API_TARGET, changeOrigin: true },
+      '/uploads': { target: API_TARGET, changeOrigin: true },
+    },
+  }
+}
+
+/** Sirve el certificado de la CA local en /dev-ca.crt para instalarlo en el iPhone (solo modo lan) */
+function serveDevCA(): Plugin {
+  return {
+    name: 'geoscript-dev-ca',
+    apply: 'serve',
+    configureServer(server) {
+      server.middlewares.use('/dev-ca.crt', (_req, res) => {
+        res.setHeader('Content-Type', 'application/x-x509-ca-cert')
+        res.setHeader('Content-Disposition', 'attachment; filename="geoscript-dev-ca.crt"')
+        res.end(fs.readFileSync(`${CERT_DIR}ca.crt`))
+      })
+    },
+  }
+}
+
+export default defineConfig(({ mode }) => ({
+  server: mode === 'lan' ? lanServer() : undefined,
   resolve: {
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   plugins: [
+    mode === 'lan' && serveDevCA(),
     react(),
     tailwindcss(),
     VitePWA({
@@ -95,4 +143,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+}))

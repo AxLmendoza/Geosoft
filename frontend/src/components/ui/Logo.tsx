@@ -9,16 +9,16 @@ export default function Logo({ dark = false, iconOnly = false }: { dark?: boolea
       <svg viewBox="0 0 64 64" className={iconOnly ? 'size-10' : 'size-9'} aria-hidden>
         <defs>
           <linearGradient id={gradient} x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0" stopColor="#3b72f6" />
-            <stop offset="1" stopColor="#1d43d8" />
+            <stop offset="0" stopColor="#6d8c73" />
+            <stop offset="1" stopColor="#3f5a47" />
           </linearGradient>
         </defs>
-        <rect width="64" height="64" rx="16" fill={solid ? `url(#${gradient})` : 'rgba(255,255,255,.16)'} />
+        <rect width="64" height="64" rx="16" fill={solid ? `url(#${gradient})` : 'rgba(250,248,242,.16)'} stroke="rgba(226,222,210,.4)" strokeWidth="1" />
         {/* anillos de "radar" alrededor del pin */}
-        <ellipse cx="32" cy="49" rx="13" ry="3.5" fill="none" stroke="#fff" strokeOpacity=".35" strokeWidth="2" />
-        <path d="M32 11c-8.3 0-15 6.5-15 14.6C17 36.5 32 50 32 50s15-13.5 15-24.4C47 17.5 40.3 11 32 11Z" fill="#fff" />
-        <circle cx="32" cy="26" r="6" fill={solid ? '#1d43d8' : '#1e348a'} />
-        <circle cx="32" cy="26" r="2.4" fill="#34d399" />
+        <ellipse cx="32" cy="49" rx="13" ry="3.5" fill="none" stroke="#faf8f2" strokeOpacity=".35" strokeWidth="2" />
+        <path d="M32 11c-8.3 0-15 6.5-15 14.6C17 36.5 32 50 32 50s15-13.5 15-24.4C47 17.5 40.3 11 32 11Z" fill="#faf8f2" />
+        <circle cx="32" cy="26" r="6" fill={solid ? '#3f5a47' : '#4c6b55'} />
+        <circle cx="32" cy="26" r="2.4" fill="#e2ded2" />
       </svg>
       {!iconOnly && (
         <span className="leading-none">

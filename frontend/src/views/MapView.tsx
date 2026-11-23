@@ -114,7 +114,7 @@ export default function MapView() {
             <button onClick={() => setParam('panel', 'filtros')} className={TOOL}>
               <FunnelIcon className="size-[18px]" aria-hidden /> Filtros
               {activeFilters > 0 && (
-                <span className="flex size-5 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white tabular-nums">
+                <span className="flex size-5 items-center justify-center rounded-full bg-olive text-[11px] font-bold text-cream tabular-nums">
                   {activeFilters}<span className="sr-only"> activos</span>
                 </span>
               )}
@@ -133,7 +133,7 @@ export default function MapView() {
             <span className="font-semibold text-slate-900 tabular-nums">{count}</span> en {ZONE_NAME}
           </p>
           {legendOpen && (
-            <div id="map-legend" className="material w-[17rem] max-w-full rounded-2xl bg-white/90! p-3.5">
+            <div id="map-legend" className="material animate-rise w-[17rem] max-w-full rounded-2xl bg-surface-raised/90! p-3.5">
               <div className="mb-2 flex items-center justify-between">
                 <p className="text-[13px] font-semibold text-slate-900">Simbología</p>
                 <button onClick={toggleLegend} className="inline-flex size-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Ocultar simbología">

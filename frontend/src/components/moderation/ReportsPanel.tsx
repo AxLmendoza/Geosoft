@@ -62,7 +62,7 @@ export default function ReportsPanel() {
 
       {isLoading && <ListSkeleton rows={4} />}
 
-      <div className="divide-y divide-slate-100 overflow-hidden rounded-2xl glass">
+      <div className="divide-y divide-line overflow-hidden rounded-2xl glass">
         {reports.map((r) => {
           const pendingFlags = r.flags?.filter((f) => f.status === 'pendiente').length ?? 0
           return (
@@ -75,7 +75,7 @@ export default function ReportsPanel() {
                   <StatusBadge status={r.status} />
                   <SeverityBadge severity={r.severity} />
                   {pendingFlags > 0 && <span className="rounded bg-red-100 px-1.5 font-bold text-red-700">{pendingFlags} denuncias</span>}
-                  {r.hidden && <span className="rounded bg-slate-800 px-1.5 font-bold text-white">Oculto</span>}
+                  {r.hidden && <span className="rounded bg-slate-100 px-1.5 font-bold text-slate-800">Oculto</span>}
                   {r.deletedAt && <span className="rounded bg-red-600 px-1.5 font-bold text-white">Eliminado</span>}
                   {r.votes.solucionado + r.votes.sin_solucion > 0 && (
                     <span title="Confirmación ciudadana (no cambia el estado)">

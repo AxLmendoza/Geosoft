@@ -29,7 +29,7 @@ export default function PhotoAttach({ value, onChange, label = 'Adjuntar foto (o
       {value && preview ? (
         <div className="relative inline-block">
           <img src={preview} alt="Foto adjunta" className="size-24 rounded-xl object-cover ring-1 ring-slate-200" />
-          <button type="button" onClick={() => onChange(null)} className="absolute -right-2 -top-2 rounded-full bg-slate-900 p-1 text-white" aria-label="Quitar foto">
+          <button type="button" onClick={() => onChange(null)} className="absolute -right-2 -top-2 rounded-full bg-night p-1 text-cream ring-2 ring-white" aria-label="Quitar foto">
             <XMarkIcon className="size-4" />
           </button>
         </div>

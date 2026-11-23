@@ -166,7 +166,7 @@ export default function AdminStatsView() {
                     <th className="py-2 text-right">Prom. solución</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-slate-100">
+                <tbody className="divide-y divide-line">
                   {stats.byArea.map((a) => (
                     <tr key={a.id ?? 'none'}>
                       <td className="py-2">
@@ -197,7 +197,7 @@ export default function AdminStatsView() {
                       <th className="py-2 text-right">Índice</th>
                     </tr>
                   </thead>
-                  <tbody className="divide-y divide-slate-100">
+                  <tbody className="divide-y divide-line">
                     {stats.priorityZones.map((z, i) => (
                       <tr key={z.colonia}>
                         <td className="py-2 text-slate-500">{i + 1}</td>

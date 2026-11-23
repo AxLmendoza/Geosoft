@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:lan": "vite --mode lan",
+    "cert:lan": "bash scripts/lan-cert.sh",
     "build": "tsc --noEmit && vite build",
     "preview": "vite preview"
   },

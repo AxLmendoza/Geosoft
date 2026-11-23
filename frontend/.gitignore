@@ -2,3 +2,6 @@ node_modules
 dist
 dev-dist
 .env
+
+# Certificados HTTPS locales (npm run dev:lan). ca.key es privada
+.certs/

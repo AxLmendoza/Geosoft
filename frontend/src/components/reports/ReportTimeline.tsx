@@ -38,7 +38,7 @@ function stepStates(report: Report): StepState[] {
 function Dot({ state }: { state: StepState }) {
   if (state === 'done')
     return (
-      <span className="flex size-6 items-center justify-center rounded-full bg-brand-600 text-white">
+      <span className="flex size-6 items-center justify-center rounded-full bg-olive text-cream shadow-[0_2px_8px_-2px_rgb(76_107_85/0.6)]">
         <CheckIcon className="size-4" aria-hidden />
       </span>
     )
@@ -195,7 +195,7 @@ export function HistoryList({ history }: { history: ReportHistoryItem[] }) {
         <li key={h.id} className="border-l-2 border-line pl-4">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="text-sm font-semibold text-slate-900">{entryTitle(h)}</p>
-            {h.internal && <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-semibold text-white" title="Solo la ve el personal">Nota interna</span>}
+            {h.internal && <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-semibold text-slate-800" title="Solo la ve el personal">Nota interna</span>}
           </div>
           <p className="text-xs text-slate-500">
             <time dateTime={h.createdAt}>{formatDateTime(h.createdAt)}</time> · {actorLabel(h)}

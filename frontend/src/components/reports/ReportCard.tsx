@@ -13,18 +13,20 @@ function ReportCard({ report, showProgress = false }: { report: Report; showProg
   return (
     <Link
       to={`/reports/${report.id}`}
-      className="group flex h-full flex-col overflow-hidden rounded-2xl glass transition duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:border-brand-200 hover:shadow-lift active:translate-y-0 active:scale-[0.99]"
+      className="gs-reveal group flex h-full flex-col overflow-hidden rounded-2xl glass glass-hover hover:-translate-y-1 active:translate-y-0 active:scale-[0.99] lg:rounded-[1.5rem]"
     >
       <div className="relative overflow-hidden bg-slate-100">
         <img
           src={cardImage(report)}
           alt={report.title}
-          className="aspect-[16/10] w-full object-cover transition duration-500 ease-out group-hover:scale-[1.04]"
+          className="aspect-[16/10] w-full object-cover transition duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.05]"
           loading="lazy"
           decoding="async"
         />
         {/* Degradado para que las etiquetas sobre la foto siempre se lean */}
-        <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-slate-950/35 via-transparent to-transparent" aria-hidden />
+        <span className="pointer-events-none absolute inset-0 bg-gradient-to-b from-night/55 via-transparent to-night/30" aria-hidden />
+        {/* Brillo de cristal que cruza la foto al pasar el cursor */}
+        <span className="pointer-events-none absolute inset-0 -translate-x-full bg-[linear-gradient(110deg,transparent_35%,rgb(255_255_255/0.22)_50%,transparent_65%)] transition-transform duration-1000 ease-out group-hover:translate-x-full" aria-hidden />
         <span
           className="absolute left-3 top-3 inline-flex items-center gap-1.5 rounded-full py-1 pl-1.5 pr-2.5 text-xs font-semibold text-white shadow-lift ring-1 ring-white/25 backdrop-blur"
           style={{ backgroundColor: report.category.color }}
@@ -35,7 +37,7 @@ function ReportCard({ report, showProgress = false }: { report: Report; showProg
           {report.category.name}
         </span>
         {report.hidden && (
-          <span className="absolute right-3 top-3 rounded-full bg-slate-900/85 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">Oculto</span>
+          <span className="absolute right-3 top-3 rounded-full bg-night/80 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur">Oculto</span>
         )}
       </div>
       <div className="flex flex-1 flex-col gap-2.5 p-4">

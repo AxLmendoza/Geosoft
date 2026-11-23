@@ -22,31 +22,31 @@ export default function AuthLayout() {
 
         <div className="relative max-w-md">
           <FadeIn>
-            <p className="text-[15px] font-medium text-brand-100/90">Reportes ciudadanos</p>
+            <p className="text-[15px] font-medium text-cream/80">Reportes ciudadanos</p>
             <h2 className="mt-3 font-display text-4xl font-semibold leading-tight xl:text-[2.75rem]">
               Tu ciudad mejora cuando la reportas.
             </h2>
-            <p className="mt-4 text-lg text-brand-100/85">
+            <p className="mt-4 text-lg text-cream/90">
               Reporta fallas de servicios públicos y sigue su atención en tiempo real, de principio a fin.
             </p>
           </FadeIn>
 
           <Stagger className="mt-10 space-y-3">
             {STEPS.map((s) => (
-              <StaggerItem key={s.title} className="flex items-start gap-4 rounded-2xl border border-white/10 bg-white/[0.06] p-4 backdrop-blur-sm">
+              <StaggerItem key={s.title} className="flex items-start gap-4 rounded-2xl border border-white/15 bg-white/[0.08] p-4 backdrop-blur-sm transition-colors duration-300 hover:bg-white/[0.13]">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-white/12 ring-1 ring-white/20">
                   <s.icon className="size-5" aria-hidden />
                 </span>
                 <div>
                   <p className="font-semibold">{s.title}</p>
-                  <p className="text-sm text-brand-100/80">{s.text}</p>
+                  <p className="text-sm text-cream/80">{s.text}</p>
                 </div>
               </StaggerItem>
             ))}
           </Stagger>
         </div>
 
-        <p className="relative text-sm text-brand-200/70">© {new Date().getFullYear()} GeoScript · Servicios públicos</p>
+        <p className="relative text-sm text-cream/65">© {new Date().getFullYear()} GeoScript · Servicios públicos</p>
       </aside>
 
       {/* Formulario */}

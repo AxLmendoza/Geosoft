@@ -146,7 +146,7 @@ export default function ReportDetailView() {
 
         {/* Columna lateral: foto, datos y ubicación */}
         <aside className="min-w-0 space-y-6">
-          <div className="overflow-hidden rounded-xl border border-line bg-slate-900">
+          <div className="overflow-hidden rounded-xl border border-line bg-night">
             <ImageViewer src={assetUrl(report.imageUrl)} alt={report.title} className="w-full" thumbClassName="max-h-80 w-full object-contain" />
           </div>
 

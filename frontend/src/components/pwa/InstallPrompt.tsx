@@ -68,7 +68,7 @@ export default function InstallPrompt() {
   if (hidden || (!deferred && !showIOS)) return null
 
   return (
-    <div className="gs-install glass-strong fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 flex items-center gap-3 rounded-2xl p-3 lg:inset-x-auto lg:bottom-3 lg:right-3 lg:w-[calc(100vw-7rem)] lg:max-w-sm">
+    <div className="gs-install glass-strong animate-rise fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 flex items-center gap-3 rounded-2xl p-3 lg:inset-x-auto lg:bottom-3 lg:right-3 lg:w-[calc(100vw-7rem)] lg:max-w-sm">
       <img src="/icons/pwa-192x192.png" alt="" className="size-11 rounded-xl" />
       <div className="min-w-0 flex-1 text-sm">
         <p className="font-bold text-slate-900">Instala GeoScript</p>

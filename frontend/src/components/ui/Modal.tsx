@@ -19,7 +19,7 @@ export default function Modal({ open, onClose, title, children, size = 'md' }: P
     <Dialog open={open} onClose={onClose} className="relative z-[1200]">
       <DialogBackdrop
         transition
-        className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-200 data-[closed]:opacity-0 data-[leave]:duration-150"
+        className="fixed inset-0 bg-night/35 backdrop-blur-sm transition-opacity duration-200 data-[closed]:opacity-0 data-[leave]:duration-150"
       />
       <div className="fixed inset-0 flex items-end justify-center p-0 sm:items-center sm:p-4">
         <DialogPanel

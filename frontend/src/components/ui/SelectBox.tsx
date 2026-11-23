@@ -18,14 +18,14 @@ export default function SelectBox<T extends string | number>({ value, onChange, 
     <div className={className}>
       {label && <span className="label">{label}</span>}
       <Listbox value={value} onChange={onChange}>
-        <ListboxButton className="relative min-h-11 w-full cursor-pointer rounded-xl border border-line-strong bg-white py-2.5 pl-3.5 pr-10 text-left text-[15px] text-slate-900 transition hover:border-slate-400 focus:outline-none data-[focus]:border-brand-600 data-[focus]:ring-4 data-[focus]:ring-brand-600/15 data-[open]:border-brand-600">
+        <ListboxButton className="relative min-h-11 w-full cursor-pointer rounded-xl border border-line-strong bg-white/70 py-2.5 shadow-xs pl-3.5 pr-10 text-left text-[15px] text-slate-900 transition hover:border-slate-400 focus:outline-none data-[focus]:border-brand-600 data-[focus]:ring-4 data-[focus]:ring-brand-600/15 data-[open]:border-brand-600">
           <span className="block truncate">{selected?.label}</span>
           <ChevronUpDownIcon className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" aria-hidden />
         </ListboxButton>
         <ListboxOptions
           anchor="bottom start"
           transition
-          className="z-[1300] max-h-72 w-[var(--button-width)] origin-top overflow-auto rounded-xl border border-line bg-white p-1 text-[15px] shadow-pop [--anchor-gap:6px] focus:outline-none transition duration-150 ease-out data-[closed]:-translate-y-1 data-[closed]:scale-[0.98] data-[closed]:opacity-0"
+          className="z-[1300] max-h-72 w-[var(--button-width)] origin-top overflow-auto rounded-xl border border-line-strong bg-surface-raised/95 p-1 backdrop-blur-xl text-[15px] shadow-pop [--anchor-gap:6px] focus:outline-none transition duration-150 ease-out data-[closed]:-translate-y-1 data-[closed]:scale-[0.98] data-[closed]:opacity-0"
         >
           {options.map((o) => (
             <ListboxOption

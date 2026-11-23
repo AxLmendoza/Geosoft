@@ -118,7 +118,7 @@ export default function AdminAreasView() {
         ) : (
           <ul className="grid gap-3 md:grid-cols-2">
             {categories.data!.map((c) => (
-              <li key={c.id} className="flex items-center gap-3 rounded-2xl glass p-3">
+              <li key={c.id} className="gs-reveal flex items-center gap-3 rounded-2xl glass glass-hover p-3">
                 <span className="flex size-10 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: c.color }}>
                   <CategoryIcon slug={c.slug} className="size-5" />
                 </span>
@@ -145,7 +145,7 @@ export default function AdminAreasView() {
         ) : (
           <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
             {areas.data!.map((a) => (
-              <li key={a.id} className={`flex flex-col gap-2 rounded-2xl glass p-4 ${a.active ? '' : 'opacity-60'}`}>
+              <li key={a.id} className={`gs-reveal flex flex-col gap-2 rounded-2xl glass glass-hover p-4 ${a.active ? '' : 'opacity-60'}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div className="min-w-0">
                     <p className="font-bold text-slate-900">{a.name}</p>
@@ -156,9 +156,9 @@ export default function AdminAreasView() {
                 </div>
                 {a.description && <p className="text-sm text-slate-600">{a.description}</p>}
                 <dl className="mt-auto grid grid-cols-3 gap-2 pt-2 text-center">
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[12px] font-medium text-slate-500">Abiertos</dt><dd className="text-lg font-bold tabular-nums">{a.openReports}</dd></div>
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[12px] font-medium text-slate-500">Personal</dt><dd className="text-lg font-bold tabular-nums">{a.membersCount}</dd></div>
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[12px] font-medium text-slate-500">Categorías</dt><dd className="text-lg font-bold tabular-nums">{a.categoriesCount}</dd></div>
+                  <div className="rounded-xl bg-white/55 p-2"><dt className="text-[12px] font-medium text-slate-500">Abiertos</dt><dd className="text-lg font-bold tabular-nums">{a.openReports}</dd></div>
+                  <div className="rounded-xl bg-white/55 p-2"><dt className="text-[12px] font-medium text-slate-500">Personal</dt><dd className="text-lg font-bold tabular-nums">{a.membersCount}</dd></div>
+                  <div className="rounded-xl bg-white/55 p-2"><dt className="text-[12px] font-medium text-slate-500">Categorías</dt><dd className="text-lg font-bold tabular-nums">{a.categoriesCount}</dd></div>
                 </dl>
                 {a.contactEmail && <p className="truncate text-xs text-slate-500">{a.contactEmail}</p>}
               </li>
