@@ -31,7 +31,7 @@ export default defineConfig({
         orientation: 'portrait',
         categories: ['utilities', 'government', 'navigation'],
         theme_color: '#2556eb',
-        background_color: '#f3f6fb',
+        background_color: '#f3f5f8',
         // 👉 Reemplaza estos archivos en /public/icons con tus íconos (mismos nombres y tamaños)
         icons: [
           { src: '/icons/pwa-192x192.png', sizes: '192x192', type: 'image/png' },

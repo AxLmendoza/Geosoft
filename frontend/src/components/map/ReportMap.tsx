@@ -78,7 +78,7 @@ function LocateButton({ onLocated }: { onLocated: (c: Coords) => void }) {
           /* el hook ya guarda el error */
         }
       }}
-      className="glass-btn absolute bottom-8 right-3 z-10 !px-3 !py-2 !text-sm"
+      className="glass-btn absolute bottom-9 right-3 z-10"
     >
       <MapPinIcon className={`size-4 ${loading ? 'animate-pulse' : ''}`} aria-hidden />
       {loading ? 'Ubicando…' : 'Cerca de mí'}
@@ -322,7 +322,7 @@ export default function ReportMap({ reports, className = '', fullscreen = false 
 
   return (
     <div className={`relative overflow-hidden ${fullscreen ? 'h-full w-full' : 'glass rounded-2xl'} ${className}`}>
-      <BaseMap zoom={13} initialPitch={0} simplified overlayClassName={fullscreen ? 'left-3 bottom-9' : undefined}>
+      <BaseMap zoom={13} initialPitch={0} simplified showZone={!fullscreen} overlayClassName={fullscreen ? 'left-3 bottom-9' : undefined}>
         <FitToReports reports={reports} />
         <Markers reports={reports} selectedId={selectedId} onSelect={onSelect} onList={onList} />
         {me && (

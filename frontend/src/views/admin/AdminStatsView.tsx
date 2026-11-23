@@ -157,7 +157,7 @@ export default function AdminStatsView() {
           <Panel title="Carga por área responsable" subtitle="Reportes abiertos, resueltos y tiempo promedio de solución de cada área o dependencia">
             <div className="overflow-x-auto">
               <table className="w-full min-w-[560px] text-left text-sm">
-                <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-slate-500">
+                <thead className="border-b border-line text-[13px] font-medium text-slate-500">
                   <tr>
                     <th className="py-2">Área</th>
                     <th className="py-2 text-right">Total</th>
@@ -188,7 +188,7 @@ export default function AdminStatsView() {
             {stats.priorityZones.length ? (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[480px] text-left text-sm">
-                  <thead className="border-b border-line text-xs font-semibold uppercase tracking-wide text-slate-500">
+                  <thead className="border-b border-line text-[13px] font-medium text-slate-500">
                     <tr>
                       <th className="py-2">#</th>
                       <th className="py-2">Colonia</th>

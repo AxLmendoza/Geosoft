@@ -67,7 +67,7 @@ export default function ReportsPanel() {
           const pendingFlags = r.flags?.filter((f) => f.status === 'pendiente').length ?? 0
           return (
             <div key={r.id} className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center">
-              <img src={assetUrl(r.thumbUrl)} alt="" className={`size-16 shrink-0 rounded-lg object-cover ${r.hidden ? 'opacity-40 grayscale' : ''}`} />
+              <img src={assetUrl(r.thumbUrl)} loading="lazy" alt="" className={`size-16 shrink-0 rounded-lg object-cover ${r.hidden ? 'opacity-40 grayscale' : ''}`} />
               <div className="min-w-0 flex-1">
                 <Link to={`/reports/${r.id}`} className="block truncate font-bold text-slate-900 hover:text-brand-700">{r.title}</Link>
                 <div className="mt-1 flex flex-wrap items-center gap-1.5 text-xs text-slate-500">

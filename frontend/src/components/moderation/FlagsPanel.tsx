@@ -45,7 +45,7 @@ export default function FlagsPanel() {
       {flags.map((f) => (
         <article key={f.id} className="flex flex-col gap-4 rounded-2xl glass p-4 sm:flex-row">
           {f.report && (
-            <img src={assetUrl(f.report.thumbUrl)} alt="" className="size-24 shrink-0 rounded-xl object-cover" />
+            <img src={assetUrl(f.report.thumbUrl)} loading="lazy" alt="" className="size-24 shrink-0 rounded-xl object-cover" />
           )}
           <div className="min-w-0 flex-1 space-y-1">
             <p className="text-sm">

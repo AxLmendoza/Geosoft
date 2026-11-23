@@ -18,7 +18,7 @@ export default function SelectBox<T extends string | number>({ value, onChange, 
     <div className={className}>
       {label && <span className="label">{label}</span>}
       <Listbox value={value} onChange={onChange}>
-        <ListboxButton className="relative min-h-11 w-full cursor-pointer rounded-xl border border-slate-300 bg-white py-2.5 pl-3.5 pr-10 text-left text-[15px] text-slate-900 shadow-xs transition hover:border-slate-400 focus:outline-none data-[focus]:border-brand-600 data-[focus]:ring-4 data-[focus]:ring-brand-600/15 data-[open]:border-brand-600">
+        <ListboxButton className="relative min-h-11 w-full cursor-pointer rounded-xl border border-line-strong bg-white py-2.5 pl-3.5 pr-10 text-left text-[15px] text-slate-900 transition hover:border-slate-400 focus:outline-none data-[focus]:border-brand-600 data-[focus]:ring-4 data-[focus]:ring-brand-600/15 data-[open]:border-brand-600">
           <span className="block truncate">{selected?.label}</span>
           <ChevronUpDownIcon className="pointer-events-none absolute right-3 top-1/2 size-5 -translate-y-1/2 text-slate-400" aria-hidden />
         </ListboxButton>

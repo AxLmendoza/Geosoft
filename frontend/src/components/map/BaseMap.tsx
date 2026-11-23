@@ -10,6 +10,8 @@ type Props = {
   onClick?: (e: MapMouseEvent) => void
   /** Muestra la etiqueta de la zona y el botón 2D/3D */
   showOverlay?: boolean
+  /** Etiqueta con el nombre de la zona (el mapa principal la integra en su propia barra) */
+  showZone?: boolean
   /** Posición de la etiqueta y el botón 2D/3D (para librar la barra lateral) */
   overlayClassName?: string
   /** Inclinación inicial (0 = vista 2D cenital) */
@@ -89,7 +91,7 @@ function ViewToggle({ initial3D }: { initial3D: boolean }) {
  * Mapa Mapbox limitado a Tecamachalco con relieve y edificios 3D.
  * Todos los mapas de la app parten de aquí para compartir estilo y límites.
  */
-export default function BaseMap({ center = DEFAULT_CENTER, zoom = 14, onClick, showOverlay = true, overlayClassName = 'left-3 top-3', initialPitch = PITCH_3D, simplified = false, children }: Props) {
+export default function BaseMap({ center = DEFAULT_CENTER, zoom = 14, onClick, showOverlay = true, showZone = true, overlayClassName = 'left-3 top-3', initialPitch = PITCH_3D, simplified = false, children }: Props) {
   if (!MAPBOX_TOKEN) {
     return (
       <div className="flex h-full w-full items-center justify-center bg-white/40 p-6 text-center text-sm text-slate-500">
@@ -117,7 +119,7 @@ export default function BaseMap({ center = DEFAULT_CENTER, zoom = 14, onClick, s
       <NavigationControl position="top-right" visualizePitch />
       {showOverlay && (
         <div className={`pointer-events-none absolute z-10 flex flex-col items-start gap-2 ${overlayClassName}`}>
-          <span className="glass-btn">{ZONE_NAME}</span>
+          {showZone && <span className="glass-btn">{ZONE_NAME}</span>}
           <ViewToggle initial3D={initialPitch > 0} />
         </div>
       )}

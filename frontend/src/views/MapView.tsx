@@ -5,6 +5,7 @@ import { FunnelIcon, InformationCircleIcon, ListBulletIcon, XMarkIcon } from '@h
 import { getReports } from '@/api/ReportAPI'
 import { useCategories } from '@/hooks/useCategories'
 import { STATUS_OPTIONS } from '@/lib/labels'
+import { ZONE_NAME } from '@/lib/mapConfig'
 import ReportMap from '@/components/map/ReportMap'
 import ReportCard from '@/components/reports/ReportCard'
 import { ReportCardSkeleton } from '@/components/ui/States'
@@ -20,7 +21,7 @@ function MapPanel({ title, onClose, children }: { title: string; onClose: () => 
       initial={{ opacity: 0, x: -16, scale: 0.98 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
-      className="glass-strong absolute inset-x-2 bottom-2 top-2 z-30 flex flex-col overflow-hidden rounded-2xl bg-white/95 backdrop-blur-xl md:inset-x-auto md:bottom-4 md:left-4 md:top-4 md:w-[24rem]"
+      className="glass-strong absolute inset-x-2 bottom-2 top-2 z-30 flex flex-col overflow-hidden rounded-3xl md:inset-x-auto md:bottom-4 md:left-4 md:top-4 md:w-[24rem]"
     >
       <header className="flex items-center justify-between gap-2 border-b border-line px-5 py-3.5">
         <h2 className="font-display text-base font-semibold text-slate-900">{title}</h2>
@@ -34,6 +35,10 @@ function MapPanel({ title, onClose, children }: { title: string; onClose: () => 
 }
 
 const LEGEND_KEY = 'gs-map-legend'
+
+/** Segmento de la barra de herramientas del mapa (44 px de alto para el pulgar) */
+const TOOL =
+  'inline-flex min-h-10 items-center gap-1.5 rounded-full px-3 text-[13px] font-semibold text-slate-800 transition-colors hover:bg-slate-900/[0.05] hover:text-slate-950 active:scale-[0.97]'
 
 /** Simbología abierta por defecto en escritorio y cerrada en celular; se recuerda la preferencia */
 function useLegendOpen() {
@@ -104,22 +109,33 @@ export default function MapView() {
           className="absolute left-3 right-14 top-3 z-20 flex flex-col items-start gap-2 md:left-4 md:right-auto"
           style={{ top: 'max(0.75rem, env(safe-area-inset-top))' }}
         >
-          <div className="flex flex-wrap items-center gap-2">
-          <button onClick={() => setParam('panel', 'filtros')} className="glass-btn !px-3 !py-2 !text-sm">
-            <FunnelIcon className="size-4" aria-hidden /> Filtros{activeFilters ? ` (${activeFilters})` : ''}
-          </button>
-          <button onClick={() => setParam('panel', 'recientes')} className="glass-btn !px-3 !py-2 !text-sm">
-            <ListBulletIcon className="size-4" aria-hidden /> Ver lista
-          </button>
-          <button onClick={toggleLegend} className="glass-btn !px-3 !py-2 !text-sm" aria-expanded={legendOpen} aria-controls="map-legend">
-            <InformationCircleIcon className="size-4" aria-hidden /> Simbología
-          </button>
-          <span className="glass-btn pointer-events-none !text-xs" aria-live="polite">{count}</span>
+          {/* Barra de herramientas: un solo bloque de material con las tres acciones */}
+          <div role="toolbar" aria-label="Herramientas del mapa" className="material flex items-center rounded-full p-1">
+            <button onClick={() => setParam('panel', 'filtros')} className={TOOL}>
+              <FunnelIcon className="size-[18px]" aria-hidden /> Filtros
+              {activeFilters > 0 && (
+                <span className="flex size-5 items-center justify-center rounded-full bg-brand-600 text-[11px] font-bold text-white tabular-nums">
+                  {activeFilters}<span className="sr-only"> activos</span>
+                </span>
+              )}
+            </button>
+            <span className="h-5 w-px bg-slate-900/10" aria-hidden />
+            <button onClick={() => setParam('panel', 'recientes')} className={TOOL}>
+              <ListBulletIcon className="size-[18px]" aria-hidden /> Lista
+            </button>
+            <span className="h-5 w-px bg-slate-900/10" aria-hidden />
+            <button onClick={toggleLegend} className={`${TOOL} ${legendOpen ? 'bg-slate-900/[0.06] text-slate-950' : ''}`} aria-expanded={legendOpen} aria-controls="map-legend">
+              <InformationCircleIcon className="size-[18px]" aria-hidden /> Simbología
+            </button>
           </div>
+          {/* Contexto: cuántos reportes se ven y dónde */}
+          <p className="material rounded-full px-3 py-1 text-[12.5px] font-medium text-slate-700" aria-live="polite">
+            <span className="font-semibold text-slate-900 tabular-nums">{count}</span> en {ZONE_NAME}
+          </p>
           {legendOpen && (
-            <div id="map-legend" className="glass-strong w-[17rem] max-w-full rounded-2xl bg-white/95 p-3.5 backdrop-blur-xl">
+            <div id="map-legend" className="material w-[17rem] max-w-full rounded-2xl bg-white/90! p-3.5">
               <div className="mb-2 flex items-center justify-between">
-                <p className="text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Simbología</p>
+                <p className="text-[13px] font-semibold text-slate-900">Simbología</p>
                 <button onClick={toggleLegend} className="inline-flex size-7 items-center justify-center rounded-full text-slate-500 hover:bg-slate-100 hover:text-slate-900" aria-label="Ocultar simbología">
                   <XMarkIcon className="size-4" aria-hidden />
                 </button>
@@ -151,8 +167,8 @@ export default function MapView() {
             {isError && <p className="rounded-lg bg-red-50 p-2 text-sm text-red-700">No se pudieron cargar los reportes. Se reintentará automáticamente.</p>}
 
             <div>
-              <p className="mb-2 text-xs font-semibold uppercase tracking-[0.08em] text-slate-500">Simbología del mapa</p>
-              <MapLegend className="rounded-xl bg-slate-50 p-3 ring-1 ring-inset ring-line" />
+              <p className="mb-2 text-[13px] font-semibold text-slate-700">Simbología del mapa</p>
+              <MapLegend className="rounded-xl bg-surface-sunken p-3 ring-1 ring-inset ring-line" />
             </div>
 
           </div>

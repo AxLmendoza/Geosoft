@@ -156,9 +156,9 @@ export default function AdminAreasView() {
                 </div>
                 {a.description && <p className="text-sm text-slate-600">{a.description}</p>}
                 <dl className="mt-auto grid grid-cols-3 gap-2 pt-2 text-center">
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Abiertos</dt><dd className="text-lg font-bold tabular-nums">{a.openReports}</dd></div>
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Personal</dt><dd className="text-lg font-bold tabular-nums">{a.membersCount}</dd></div>
-                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[11px] font-bold uppercase text-slate-500">Categorías</dt><dd className="text-lg font-bold tabular-nums">{a.categoriesCount}</dd></div>
+                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[12px] font-medium text-slate-500">Abiertos</dt><dd className="text-lg font-bold tabular-nums">{a.openReports}</dd></div>
+                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[12px] font-medium text-slate-500">Personal</dt><dd className="text-lg font-bold tabular-nums">{a.membersCount}</dd></div>
+                  <div className="rounded-xl bg-white/50 p-2"><dt className="text-[12px] font-medium text-slate-500">Categorías</dt><dd className="text-lg font-bold tabular-nums">{a.categoriesCount}</dd></div>
                 </dl>
                 {a.contactEmail && <p className="truncate text-xs text-slate-500">{a.contactEmail}</p>}
               </li>

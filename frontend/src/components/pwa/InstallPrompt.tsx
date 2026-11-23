@@ -68,7 +68,7 @@ export default function InstallPrompt() {
   if (hidden || (!deferred && !showIOS)) return null
 
   return (
-    <div className="gs-install glass-strong fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-50 flex items-center gap-3 rounded-2xl p-3 md:inset-x-auto md:bottom-3 md:right-3 md:w-[calc(100vw-7rem)] md:max-w-sm">
+    <div className="gs-install glass-strong fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-50 flex items-center gap-3 rounded-2xl p-3 lg:inset-x-auto lg:bottom-3 lg:right-3 lg:w-[calc(100vw-7rem)] lg:max-w-sm">
       <img src="/icons/pwa-192x192.png" alt="" className="size-11 rounded-xl" />
       <div className="min-w-0 flex-1 text-sm">
         <p className="font-bold text-slate-900">Instala GeoScript</p>
@@ -81,12 +81,12 @@ export default function InstallPrompt() {
         )}
       </div>
       {deferred && (
-        <button onClick={install} className="flex shrink-0 items-center gap-1 rounded-xl bg-brand-600 px-3 py-2 text-sm font-bold text-white hover:bg-brand-700">
-          <ArrowDownTrayIcon className="size-4" /> Instalar
+        <button onClick={install} className="btn-primary btn-compact shrink-0">
+          <ArrowDownTrayIcon className="size-4" aria-hidden /> Instalar
         </button>
       )}
-      <button onClick={dismiss} aria-label="Cerrar" className="shrink-0 text-slate-400 hover:text-slate-600">
-        <XMarkIcon className="size-5" />
+      <button onClick={dismiss} aria-label="Cerrar aviso de instalación" className="-m-1 flex size-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700">
+        <XMarkIcon className="size-5" aria-hidden />
       </button>
     </div>
   )

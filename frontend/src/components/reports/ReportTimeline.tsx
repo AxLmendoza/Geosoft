@@ -152,7 +152,7 @@ export function CurrentStatusCard({ report }: { report: Report }) {
   const last = report.history?.at(-1)
   return (
     <div>
-      <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Estado actual</p>
+      <p className="text-[13px] font-medium text-slate-500">Estado actual</p>
       <p className="mt-1 flex items-center gap-2 font-display text-xl font-semibold text-slate-900">
         <span className={`size-2.5 rounded-full ${s.dot}`} aria-hidden /> {s.label}
       </p>
@@ -195,7 +195,7 @@ export function HistoryList({ history }: { history: ReportHistoryItem[] }) {
         <li key={h.id} className="border-l-2 border-line pl-4">
           <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
             <p className="text-sm font-semibold text-slate-900">{entryTitle(h)}</p>
-            {h.internal && <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-white" title="Solo la ve el personal">Nota interna</span>}
+            {h.internal && <span className="rounded bg-slate-800 px-1.5 py-0.5 text-[11px] font-semibold text-white" title="Solo la ve el personal">Nota interna</span>}
           </div>
           <p className="text-xs text-slate-500">
             <time dateTime={h.createdAt}>{formatDateTime(h.createdAt)}</time> · {actorLabel(h)}

@@ -45,7 +45,7 @@ export function ListSkeleton({ rows = 5 }: { rows?: number }) {
 /** Mensaje cuando no hay datos */
 export function EmptyState({ title, text, action, icon }: { title: string; text?: string; action?: ReactNode; icon?: ReactNode }) {
   return (
-    <FadeIn className="relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-white/70 px-6 py-14 text-center">
+    <FadeIn className="relative flex flex-col items-center gap-2 overflow-hidden rounded-2xl border border-line bg-surface px-6 py-14 text-center">
       <span className="relative mb-2 flex size-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600 ring-8 ring-brand-50/50">
         {icon ?? <InboxIcon className="size-7" aria-hidden />}
       </span>

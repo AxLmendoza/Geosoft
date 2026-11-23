@@ -26,18 +26,18 @@ export default function ReloadPrompt() {
   }
 
   return (
-    <div className="fixed inset-x-3 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6 z-[1400] mx-auto max-w-sm rounded-2xl border border-white/10 bg-slate-900/75 p-4 text-white shadow-2xl backdrop-blur-xl" role="alert">
+    <div className="glass-strong fixed inset-x-3 bottom-[calc(5.25rem+env(safe-area-inset-bottom))] z-[1400] mx-auto max-w-sm rounded-2xl p-4 text-slate-800 lg:inset-x-auto lg:bottom-6 lg:right-6" role="status">
       <div className="flex items-start gap-3">
-        {needRefresh ? <ArrowPathIcon className="size-6 shrink-0 text-brand-300" /> : <CheckCircleIcon className="size-6 shrink-0 text-emerald-400" />}
-        <p className="flex-1 text-sm">
+        {needRefresh ? <ArrowPathIcon className="size-6 shrink-0 text-brand-600" aria-hidden /> : <CheckCircleIcon className="size-6 shrink-0 text-emerald-600" aria-hidden />}
+        <p className="flex-1 pt-0.5 text-sm font-medium">
           {needRefresh ? 'Hay una nueva versión de GeoScript disponible.' : 'GeoScript está lista para usarse sin conexión.'}
         </p>
-        <button onClick={close} aria-label="Cerrar" className="text-slate-400 hover:text-white">
-          <XMarkIcon className="size-5" />
+        <button onClick={close} aria-label="Cerrar aviso" className="-m-2 flex size-10 shrink-0 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700">
+          <XMarkIcon className="size-5" aria-hidden />
         </button>
       </div>
       {needRefresh && (
-        <button onClick={() => updateServiceWorker(true)} className="mt-3 w-full rounded-xl bg-brand-500 py-2 text-sm font-bold hover:bg-brand-400">
+        <button onClick={() => updateServiceWorker(true)} className="btn-primary mt-3 w-full">
           Actualizar ahora
         </button>
       )}

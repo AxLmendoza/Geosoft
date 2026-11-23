@@ -1,4 +1,4 @@
-import { useState, type ComponentType, type SVGProps } from 'react'
+import { useEffect, useState, type ComponentType, type SVGProps } from 'react'
 import { Link, NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { Dialog, DialogBackdrop, DialogPanel, DialogTitle } from '@headlessui/react'
 import { ArrowRightStartOnRectangleIcon, Bars3Icon, CameraIcon, XMarkIcon } from '@heroicons/react/24/outline'
@@ -20,11 +20,32 @@ function Avatar({ name, className = 'size-9 text-sm' }: { name?: string; classNa
   return (
     <span
       aria-hidden
-      className={`flex shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-brand-500 to-brand-700 font-display font-semibold text-white ring-2 ring-white ${className}`}
+      className={`flex shrink-0 items-center justify-center rounded-full bg-brand-600 font-display font-semibold text-white ring-2 ring-white ${className}`}
     >
       {initials(name)}
     </span>
   )
+}
+
+/**
+ * En el celular, mientras se escribe en un campo el teclado ocupa media pantalla:
+ * la barra inferior se oculta para no tapar el formulario ni el botón de enviar.
+ */
+function useTyping() {
+  const [typing, setTyping] = useState(false)
+  useEffect(() => {
+    const isField = (el: EventTarget | null) =>
+      el instanceof HTMLElement && (el.matches('input:not([type=checkbox]):not([type=radio]):not([type=file]):not([type=range]), textarea, select') || el.isContentEditable)
+    const onIn = (e: FocusEvent) => setTyping(isField(e.target) && window.matchMedia('(max-width: 1023px)').matches)
+    const onOut = () => setTyping(false)
+    document.addEventListener('focusin', onIn)
+    document.addEventListener('focusout', onOut)
+    return () => {
+      document.removeEventListener('focusin', onIn)
+      document.removeEventListener('focusout', onOut)
+    }
+  }, [])
+  return typing
 }
 
 /* ----------------------------- Escritorio ----------------------------- */
@@ -36,7 +57,7 @@ function SideLink({ item, layoutGroup }: { item: NavLinkItem; layoutGroup: strin
       end={item.end}
       className={({ isActive }) =>
         `relative flex min-h-10 items-center gap-3 rounded-xl px-3 py-2 text-[15px] font-medium transition-colors duration-150 ${
-          isActive ? 'text-brand-800' : 'text-slate-600 hover:bg-slate-100/80 hover:text-slate-900'
+          isActive ? 'text-slate-950' : 'text-slate-600 hover:bg-slate-900/[0.04] hover:text-slate-900'
         }`
       }
     >
@@ -46,15 +67,7 @@ function SideLink({ item, layoutGroup }: { item: NavLinkItem; layoutGroup: strin
             <m.span
               layoutId={`nav-active-${layoutGroup}`}
               transition={SPRING}
-              className="absolute inset-0 rounded-xl bg-brand-50 ring-1 ring-inset ring-brand-100"
-              aria-hidden
-            />
-          )}
-          {isActive && (
-            <m.span
-              layoutId={`nav-bar-${layoutGroup}`}
-              transition={SPRING}
-              className="absolute -left-3 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-600"
+              className="absolute inset-0 rounded-xl bg-white shadow-card ring-1 ring-line"
               aria-hidden
             />
           )}
@@ -71,7 +84,7 @@ function NavGroups({ groups, onNavigate, layoutGroup }: { groups: NavGroup[]; on
     <div className="space-y-6" onClick={onNavigate}>
       {groups.map((g, i) => (
         <div key={g.title ?? i}>
-          {g.title && <p className="mb-1.5 px-3 text-[11px] font-semibold uppercase tracking-[0.1em] text-slate-400">{g.title}</p>}
+          {g.title && <p className="mb-1.5 px-3 text-[13px] font-medium text-slate-500">{g.title}</p>}
           <div className="space-y-0.5">
             {g.items.map((item) => <SideLink key={item.to} item={item} layoutGroup={layoutGroup} />)}
           </div>
@@ -89,18 +102,18 @@ function TabLink({ to, label, icon: Icon, end }: { to: string; label: string; ic
       to={to}
       end={end}
       className={({ isActive }) =>
-        `relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold transition-colors ${
-          isActive ? 'text-brand-700' : 'text-slate-500 active:text-slate-700'
+        `relative flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold transition-colors ${
+          isActive ? 'text-brand-700' : 'text-slate-500 active:text-slate-800'
         }`
       }
     >
       {({ isActive }) => (
         <>
           {isActive && (
-            <m.span layoutId="tab-active" transition={SPRING} className="absolute inset-x-3 top-0 h-[3px] rounded-b-full bg-brand-600" aria-hidden />
+            <m.span layoutId="tab-active" transition={SPRING} className="absolute top-1 h-8 w-14 rounded-full bg-brand-600/10" aria-hidden />
           )}
-          <Icon className="size-6" aria-hidden />
-          <span className="max-w-full truncate px-1">{label}</span>
+          <Icon className="relative size-6" aria-hidden />
+          <span className="relative max-w-full truncate px-1">{label}</span>
         </>
       )}
     </NavLink>
@@ -113,7 +126,7 @@ function ReportTab({ active }: { active: boolean }) {
     <Link to="/reports/new" className="flex min-w-0 flex-1 flex-col items-center justify-end gap-0.5 pb-1.5 text-[11px] font-semibold text-brand-700" aria-current={active ? 'page' : undefined}>
       <m.span
         whileTap={{ scale: 0.92 }}
-        className={`-mt-6 flex size-14 items-center justify-center rounded-2xl bg-brand-600 text-white shadow-brand ring-4 ring-canvas ${active ? 'bg-brand-700' : ''}`}
+        className={`-mt-5 flex size-14 items-center justify-center rounded-full text-white shadow-brand ring-4 ring-white/90 ${active ? 'bg-brand-700' : 'bg-brand-600'}`}
       >
         <CameraIcon className="size-7" aria-hidden />
       </m.span>
@@ -138,6 +151,7 @@ export default function AppLayout() {
   const navigate = useNavigate()
   const { pathname } = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
+  const typing = useTyping()
   const isHome = pathname === '/'
   const groups = navFor(user?.role)
   const citizen = reportsFirst(user?.role)
@@ -184,7 +198,7 @@ export default function AppLayout() {
       </a>
 
       {/* ---------- Escritorio / tablet: barra lateral con etiquetas ---------- */}
-      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-white/95 backdrop-blur md:flex" aria-label="Navegación principal">
+      <aside className="fixed inset-y-0 left-0 z-40 hidden w-64 flex-col border-r border-line bg-canvas lg:flex" aria-label="Navegación principal">
         <Link to="/" className="flex items-center px-5 pb-4 pt-6" aria-label="GeoScript, inicio">
           <Logo dark />
         </Link>
@@ -204,7 +218,7 @@ export default function AppLayout() {
       {/* ---------- Celular: encabezado compacto fuera del mapa ---------- */}
       {!isHome && (
         <header
-          className="sticky top-0 z-30 flex items-center justify-between border-b border-line/80 bg-canvas/85 px-4 py-2.5 backdrop-blur-lg md:hidden"
+          className="material sticky top-0 z-30 flex items-center justify-between px-4 py-2.5 shadow-none! border-b border-slate-900/[0.06] lg:hidden"
           style={{ paddingTop: 'max(0.625rem, env(safe-area-inset-top))' }}
         >
           <Link to="/" aria-label="GeoScript, inicio"><Logo dark /></Link>
@@ -218,7 +232,7 @@ export default function AppLayout() {
 
       {/* ---------- Celular: barra inferior con etiquetas ---------- */}
       <nav
-        className="fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-line bg-white/90 px-2 pt-1 shadow-[0_-8px_24px_-12px_rgb(15_23_42/0.18)] backdrop-blur-xl md:hidden"
+        className={`material fixed inset-x-0 bottom-0 z-40 flex items-stretch gap-1 border-t border-slate-900/[0.06] px-2 pt-1 sm:px-[calc(50vw-17rem)] transition-transform duration-200 lg:hidden ${typing ? 'translate-y-full' : ''}`}
         // Altura fija = la misma que libra el mapa (bottom de <main>): sin rendijas con ningún rol
         style={{ height: 'calc(4.25rem + env(safe-area-inset-bottom))', paddingBottom: 'max(0.5rem, env(safe-area-inset-bottom))' }}
         aria-label="Navegación principal"
@@ -228,7 +242,7 @@ export default function AppLayout() {
         {primary.slice(1).map((i) => <TabLink key={i.to} to={i.to} end={i.end} icon={i.icon} label={short(i.to) ?? i.label} />)}
         <button
           onClick={() => setMenuOpen(true)}
-          className="flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl py-1.5 text-[11px] font-semibold text-slate-500 active:text-slate-700"
+          className="flex min-h-12 min-w-0 flex-1 flex-col items-center justify-center gap-1 py-1 text-[11px] font-semibold text-slate-500 active:text-slate-800"
           aria-haspopup="dialog"
         >
           <Bars3Icon className="size-6" aria-hidden />
@@ -237,7 +251,7 @@ export default function AppLayout() {
       </nav>
 
       {/* Menú completo del celular (hoja inferior) */}
-      <Dialog open={menuOpen} onClose={setMenuOpen} className="relative z-[1300] md:hidden">
+      <Dialog open={menuOpen} onClose={setMenuOpen} className="relative z-[1300] lg:hidden">
         <DialogBackdrop transition className="fixed inset-0 bg-slate-900/40 backdrop-blur-[2px] transition-opacity duration-200 data-[closed]:opacity-0" />
         <div className="fixed inset-x-0 bottom-0">
           <DialogPanel
@@ -263,11 +277,11 @@ export default function AppLayout() {
 
       {isHome ? (
         // El inicio es el mapa; en el celular termina donde empieza la barra inferior
-        <main id="main" className="fixed inset-x-0 top-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] md:bottom-0 md:left-64">
+        <main id="main" className="fixed inset-x-0 top-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] lg:bottom-0 lg:left-64">
           <Outlet />
         </main>
       ) : (
-        <main id="main" className="px-4 pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 md:py-10 md:pl-[18.5rem] md:pr-10">
+        <main id="main" className="px-4 pt-5 pb-[calc(7rem+env(safe-area-inset-bottom))] sm:px-6 lg:py-10 lg:pl-[18.5rem] lg:pr-10">
           <PageTransition key={pathname} className="mx-auto max-w-6xl">
             <Outlet />
           </PageTransition>

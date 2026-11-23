@@ -113,7 +113,7 @@ export default function UsersPanel() {
 
       <div className="overflow-x-auto rounded-2xl glass">
         <table className="w-full min-w-[640px] text-left text-sm">
-          <thead className="border-b border-line bg-slate-50 text-xs font-semibold uppercase tracking-wide text-slate-500">
+          <thead className="border-b border-line bg-slate-50 text-[13px] font-medium text-slate-500">
             <tr>
               <th className="px-4 py-3">Usuario</th>
               <th className="px-4 py-3">Rol</th>

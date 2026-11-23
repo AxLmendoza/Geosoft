@@ -22,7 +22,7 @@ export default function AuthLayout() {
 
         <div className="relative max-w-md">
           <FadeIn>
-            <p className="text-sm font-semibold uppercase tracking-[0.12em] text-brand-200">Reportes ciudadanos</p>
+            <p className="text-[15px] font-medium text-brand-100/90">Reportes ciudadanos</p>
             <h2 className="mt-3 font-display text-4xl font-semibold leading-tight xl:text-[2.75rem]">
               Tu ciudad mejora cuando la reportas.
             </h2>
